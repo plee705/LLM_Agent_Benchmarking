@@ -33,7 +33,7 @@ prompt: |
   Bob requirements:
   - Shape: sphere
   - Diameter: 0.1 meter
-  - Radius: 0.5 meter
+  - Radius: 0.05 meter
   - Mass: 1.0 kg
 
   Environment:

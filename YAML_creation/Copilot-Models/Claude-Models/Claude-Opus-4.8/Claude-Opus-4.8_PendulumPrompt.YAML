@@ -28,7 +28,7 @@ prompt: |
   BOB SPECIFICATIONS:
   - Shape: Sphere
   - Diameter: 0.1 meter
-  - Radius: 0.5 meters
+  - Radius: 0.05 meters
   - Mass: 1.0 kilogram
   - Position: At the end of the rod
   
@@ -90,7 +90,7 @@ parameters:
   bob:
     shape: sphere
     diameter_m: 0.1
-    radius_m: 0.5
+    radius_m: 0.05
     mass_kg: 1.0
   
   environment:

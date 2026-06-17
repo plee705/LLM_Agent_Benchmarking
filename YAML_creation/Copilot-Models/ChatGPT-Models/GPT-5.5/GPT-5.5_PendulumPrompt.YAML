@@ -42,7 +42,7 @@ prompt:
     Bob requirements:
     - Shape: sphere
     - Diameter: 0.1 m
-    - Radius: 0.5 m
+    - Radius: 0.05 m
     - Mass: 1.0 kg
     - Initial bob center located in the +x direction from the hinge
 

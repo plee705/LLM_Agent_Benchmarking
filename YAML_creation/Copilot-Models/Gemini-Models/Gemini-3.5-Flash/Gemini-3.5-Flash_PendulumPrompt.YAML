@@ -36,7 +36,7 @@ prompt_specification:
 
     ### Pendulum Bob
     - Shape: Sphere (geom type="sphere")
-    - Diameter: 0.1 m (radius = 0.5 m)
+    - Diameter: 0.1 m (radius = 0.05 m)
     - Mass: 1.0 kg (set mass="1.0" or density so total mass is 1.0 kg)
     - Location (at rest relative to joint): Pointing horizontally in the +x direction because initial conditions require the bob to start horizontal (located at [0.2485, 1, 0] in world coordinates).
 

@@ -49,7 +49,7 @@ agent:
 
       Bob requirements:
       - Shape: sphere.
-      - Diameter: 0.1 m, so radius must be 0.5 m.
+      - Diameter: 0.1 m, so radius must be 0.05 m.
       - Mass: 1.0 kg.
       - The bob center must be exactly one rod length from the hinge.
 

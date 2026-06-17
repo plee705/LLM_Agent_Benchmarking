@@ -42,7 +42,7 @@ instructions:
     bob:
       shape: sphere
       diameter_m: 0.1
-      radius_m: 0.5
+      radius_m: 0.05
       mass_kg: 1.0
       location_initial: >-
         The bob center must start 0.2485 m in the +x direction from the hinge.
@@ -93,7 +93,7 @@ recommended_implementation:
     - body pos="0 1 0"
     - joint type="hinge" axis="0 0 1" damping="0" frictionloss="0"
     - geom for optional massless, non-colliding rod visualization
-    - geom type="sphere" size="0.5" mass="1"
+    - geom type="sphere" size="0.05" mass="1"
     - keyframe with qpos="0" and qvel="0" if the body is modeled already horizontal
   caution: >-
     Do not create a second joint. Do not assign mass or collision to the rod. Do not

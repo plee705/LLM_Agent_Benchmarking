@@ -63,7 +63,7 @@ prompt: |-
   Bob requirements:
 
   - Shape must be a sphere.
-  - Diameter must be exactly 0.1 m, so the sphere radius/size must be 0.5 m.
+  - Diameter must be exactly 0.1 m, so the sphere radius/size must be 0.05 m.
   - Mass must be exactly 1.0 kg.
   - The bob center must be at the rod endpoint, exactly 0.2485 m from the hinge.
   - Do not add any extra joint for the bob.
@@ -102,7 +102,7 @@ prompt: |-
   - Rod length is 0.2485 m.
   - Rod mass contribution is 0 kg.
   - Rod collision is disabled.
-  - Bob sphere radius is 0.5 m.
+  - Bob sphere radius is 0.05 m.
   - Bob mass is 1.0 kg.
   - Gravity is 0 -9.81 0.
   - Energy computation is enabled.

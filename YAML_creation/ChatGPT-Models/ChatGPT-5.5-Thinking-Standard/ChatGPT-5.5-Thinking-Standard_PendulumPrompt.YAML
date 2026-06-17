@@ -33,7 +33,7 @@ physical_system:
   bob:
     shape: sphere
     diameter_m: 0.1
-    radius_m: 0.5
+    radius_m: 0.05
     mass_kg: 1.0
   environment:
     gravity_mps2: [0.0, -9.81, 0.0]
@@ -86,7 +86,7 @@ implementation_guidance:
     - >-
       Use a single <joint type="hinge" axis="0 0 1" damping="0" frictionloss="0"/>.
     - >-
-      Use a sphere geom for the bob with size="0.5" and mass="1.0".
+      Use a sphere geom for the bob with size="0.05" and mass="1.0".
     - >-
       Set initial joint position and velocity in <keyframe> so qpos is pi/2 and
       qvel is 0, unless using another valid MuJoCo initialization mechanism.

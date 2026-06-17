@@ -41,7 +41,7 @@ specifications:
   bob:
     shape: "sphere"
     diameter: 0.1  # meters
-    radius: 0.5  # meters
+    radius: 0.05  # meters
     mass: 1.0  # kg
     material: "default"
   
