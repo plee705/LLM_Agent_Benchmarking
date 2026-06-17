@@ -1,0 +1,59 @@
+meta:
+  agent: "OpenCode"
+  model: "Gemma-4-26B"
+  task_type: "MuJoCo XML Generation"
+
+prompt_specification:
+  system_prompt: |
+    You are an expert MuJoCo environment developer. Your task is to generate a highly accurate, clean, and valid MuJoCo XML model of a simple ideal pendulum adhering strictly to the specifications and acceptance criteria provided below. 
+    Output ONLY the raw XML code within a single, standard XML code block (```xml ... ```). Do not include any other markdown explanations, notes, or introductions.
+
+  user_prompt: |
+    Generate a MuJoCo XML model of a simple ideal pendulum in accordance with the specifications below.
+
+    ### Coordinate System
+    - +x-axis: right
+    - +y-axis: upward
+    - +z-axis: out of page / screen
+
+    ### Physics & Environment
+    - Gravity: [0, -9.81, 0] m/s² (set via <option gravity="0 -9.81 0">)
+    - Energy Computation: Enabled (set via <option><flag energy="enable"/></option>)
+    - Units: Use SI units throughout.
+
+    ### Pendulum Joint
+    - Type: Hinge joint
+    - Name: "pendulum_joint"
+    - Location / Position (pos): [0, 1, 0] m (relative to worldbody or parent, specify accordingly)
+    - Rotation Axis (axis): z-axis only ([0, 0, 1])
+    - Friction: No damping, no friction, no losses (damping="0", frictionloss="0", armature="0" where applicable)
+
+    ### Pendulum Rod
+    - Length: 0.2485 m
+    - Mass: 0 kg (massless rod)
+    - Geometry: Typically modeled as a cylinder or capsule from the joint center to the bob, or if massless, represent it visually using visual geometries (rgba="0.8 0.8 0.8 0.5") with collision disabled.
+    - Collision: Disabled (conaffinity="0" contype="0")
+
+    ### Pendulum Bob
+    - Shape: Sphere (geom type="sphere")
+    - Diameter: 0.1 m (radius = 0.5 m)
+    - Mass: 1.0 kg (set mass="1.0" or density so total mass is 1.0 kg)
+    - Location (at rest relative to joint): Pointing horizontally in the +x direction because initial conditions require the bob to start horizontal (located at [0.2485, 1, 0] in world coordinates).
+
+    ### Initial Dynamic Conditions
+    - Pendulum starts horizontal (+90 degrees from vertical, pointing along the +x direction).
+    - Initial angular velocity = 0 rad/s.
+    - To represent this in MuJoCo, either model the resting pose of the pendulum body extending along the +x direction from the hinge joint pos=[0.2485, 1, 0] with joint angle ref/qpos set to 0, or model it vertically and set the initial joint qpos to +1.57079632679 rad (+90 degrees). Model it directly via body offset and coordinates so that the physical representation is elegant.
+
+    ### Acceptance Criteria
+    - Exactly one hinge joint.
+    - Joint rotates only about the z-axis ([0, 0, 1]).
+    - Rod length = 0.2485 m.
+    - Rod mass = 0 kg.
+    - Bob mass = 1 kg.
+    - Gravity = [0, -9.81, 0] m/s².
+    - Initial angle = +90 degrees from vertical.
+    - Initial angular velocity = 0 rad/s.
+    - Energy computation enabled.
+
+    Please produce the complete, valid, and parser-friendly MuJoCo XML markup. Use a single XML block for your output.

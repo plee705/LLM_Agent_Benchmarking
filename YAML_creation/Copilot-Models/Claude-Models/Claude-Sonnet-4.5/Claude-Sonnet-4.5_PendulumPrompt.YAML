@@ -1,0 +1,125 @@
+---
+metadata:
+  agent_type: "OpenCode"
+  model: "Gemma-4 26B"
+  task_name: "MuJoCo Simple Ideal Pendulum Generation"
+  description: "Generate a MuJoCo XML model of a simple ideal pendulum"
+  created_date: "2026-06-17"
+  version: "1.0"
+
+coordinate_system:
+  x_axis: "right"
+  y_axis: "upward"
+  z_axis: "out of page"
+
+task_description: |
+  Generate a valid MuJoCo XML model of a simple ideal pendulum with the following specifications.
+  The model should be physically accurate and meet all acceptance criteria.
+
+pendulum_specifications:
+  type: "ideal_pendulum"
+  
+  joint:
+    location: [0, 1, 0]
+    location_unit: "meters"
+    rotation_axis: "z-axis"
+    damping: 0
+    friction: 0
+    losses: "none"
+    
+  rod:
+    length: 0.2485
+    length_unit: "meters"
+    mass: 0
+    mass_unit: "kilograms"
+    shape: "cylinder"
+    collision_enabled: false
+    density: 0
+    
+  bob:
+    shape: "sphere"
+    diameter: 0.1
+    diameter_unit: "meters"
+    mass: 1.0
+    mass_unit: "kilograms"
+    density: "calculated_from_mass_and_diameter"
+
+environment:
+  gravity:
+    - 0
+    - -9.81
+    - 0
+  gravity_unit: "m/s²"
+  energy_computation: true
+
+initial_conditions:
+  pendulum_orientation: "horizontal"
+  bob_position_direction: "+x_direction_from_hinge"
+  initial_angle: 90
+  initial_angle_unit: "degrees_from_vertical"
+  initial_angular_velocity: 0
+  initial_angular_velocity_unit: "rad/s"
+
+acceptance_criteria:
+  - "Exactly one hinge joint in the model"
+  - "Joint rotates only about z-axis"
+  - "Rod length equals 0.2485 meters"
+  - "Rod mass equals 0 kilograms"
+  - "Bob mass equals 1.0 kilograms"
+  - "Gravity vector equals [0, -9.81, 0] m/s²"
+  - "Initial pendulum angle equals +90° from vertical"
+  - "Initial angular velocity equals 0 rad/s"
+  - "Energy computation is enabled in the model"
+  - "Model is valid MuJoCo XML"
+  - "All dimensions use SI units (meters, kilograms, seconds)"
+
+output_requirements:
+  format: "MuJoCo XML model"
+  file_extension: ".xml"
+  root_element: "mujoco"
+  required_sections:
+    - "worldbody"
+    - "actuator (optional)"
+    - "equality (optional)"
+  units: "SI_units"
+  validity: "must_be_parseable_by_MuJoCo"
+  documentation: "include_comments_explaining_key_components"
+
+task_instructions: |
+  1. Create a MuJoCo XML model that satisfies all specifications above.
+  
+  2. Model structure:
+     - Define a world body with default gravity
+     - Create a hinge joint at location [0, 1, 0] that rotates about the z-axis
+     - Define a massless rod of length 0.2485 m connected to the hinge
+    - Define a spherical bob of diameter 0.1 m and mass 1.0 kg at the end of the rod
+  
+  3. Initial conditions:
+     - Position the bob horizontally (+x direction) at initialization
+     - Set initial angular velocity to 0 rad/s
+  
+  4. Physical properties:
+     - Ensure gravity is [0, -9.81, 0] m/s²
+     - Enable energy computation for the model
+     - No damping, friction, or losses on the joint
+  
+  5. Validation:
+     - Verify the model has exactly one hinge joint
+     - Confirm the joint axis is z-only
+     - Ensure all dimensions are correct
+     - Confirm energy computation is enabled
+     - Test that the XML is valid and parseable
+  
+  6. Output:
+     - Return only the MuJoCo XML model
+     - Include comments explaining the model structure
+     - Ensure the XML is properly formatted and indented
+
+quality_checks:
+  - "Validate XML syntax"
+  - "Verify all required elements are present"
+  - "Check all numerical values match specifications"
+  - "Confirm joint configuration is correct"
+  - "Validate physics parameters"
+  - "Ensure energy computation flag is set"
+  - "Test that model can be loaded by MuJoCo simulator"

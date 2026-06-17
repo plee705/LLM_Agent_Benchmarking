@@ -1,0 +1,149 @@
+---
+agent_type: OpenCode
+model: Gemma-4-26B
+task_name: MuJoCo Simple Ideal Pendulum Generation
+description: Generate a MuJoCo XML model of a simple ideal pendulum with precise specifications
+
+prompt: |
+  You are tasked with generating a valid MuJoCo XML model file for a simple ideal pendulum system.
+  
+  Create a complete and functional MuJoCo XML model that meets ALL the following specifications:
+  
+  COORDINATE SYSTEM:
+  - +x = right
+  - +y = upward
+  - +z = out of page
+  
+  PENDULUM STRUCTURE:
+  - Type: Ideal pendulum with massless rod and weighted bob
+  - Hinge joint location: [0, 1, 0] meters
+  - Hinge rotation axis: z-axis only (no rotation about x or y axes)
+  - No damping, friction, or energy losses
+  
+  ROD SPECIFICATIONS:
+  - Length: 0.2485 meters
+  - Mass: 0 kilograms (massless)
+  - Collision: Disabled
+  
+  BOB SPECIFICATIONS:
+  - Shape: Sphere
+  - Diameter: 0.1 meter
+  - Radius: 0.5 meters
+  - Mass: 1.0 kilogram
+  - Position: At the end of the rod
+  
+  ENVIRONMENT:
+  - Gravity: [0, -9.81, 0] m/s²
+  - Units: SI (meters, kilograms, seconds)
+  
+  INITIAL CONDITIONS:
+  - Starting position: Horizontal (bob in +x direction from hinge)
+  - Initial angle: +90 degrees from vertical
+  - Initial angular velocity: 0 rad/s
+  
+  MODEL CONFIGURATION:
+  - Enable energy computation (kinetic + potential energy tracking)
+  - Ensure the model is physically valid
+  - Use proper inertia calculations for the spherical bob
+  
+  ACCEPTANCE CRITERIA:
+  1. Model must contain exactly ONE hinge joint
+  2. Hinge joint must rotate ONLY about the z-axis
+  3. Rod length must be exactly 0.2485 m
+  4. Rod mass must be exactly 0 kg
+  5. Bob mass must be exactly 1 kg
+  6. Gravity vector must be [0, -9.81, 0]
+  7. Initial angle must be +90° from vertical
+  8. Initial angular velocity must be 0 rad/s
+  9. Energy computation must be enabled
+  10. Output must be a valid, well-formed MuJoCo XML file
+  
+  DELIVERABLE:
+  Return ONLY the complete MuJoCo XML model code. The XML should:
+  - Include proper DOCTYPE and root mujoco tags
+  - Define world body with gravity
+  - Define joint with appropriate attributes
+  - Define bob geometry with correct mass and inertia
+  - Include option tags for energy computation
+  - Be syntactically correct and ready for simulation
+  - Include all necessary attributes for proper MuJoCo simulation
+  
+  Generate the XML now:
+
+parameters:
+  coordinate_system:
+    x: right
+    y: upward
+    z: out_of_page
+  
+  joint:
+    location: [0, 1, 0]
+    rotation_axis: z
+    damping: 0
+    friction: 0
+  
+  rod:
+    length_m: 0.2485
+    mass_kg: 0
+    collision: disabled
+  
+  bob:
+    shape: sphere
+    diameter_m: 0.1
+    radius_m: 0.5
+    mass_kg: 1.0
+  
+  environment:
+    gravity: [0, -9.81, 0]
+    units: SI
+  
+  initial_conditions:
+    position: horizontal
+    angle_degrees: 90
+    angular_velocity_rad_s: 0
+  
+  configuration:
+    energy_computation: enabled
+    physical_validity: required
+
+acceptance_criteria:
+  - criterion: "Exactly one hinge joint"
+    verification: "Count joint elements in XML"
+  
+  - criterion: "Joint rotates only about z-axis"
+    verification: "Check axis attribute is [0, 0, 1]"
+  
+  - criterion: "Rod length equals 0.2485 m"
+    verification: "Verify body position or joint range"
+  
+  - criterion: "Rod mass equals 0 kg"
+    verification: "Check body mass attribute or absence"
+  
+  - criterion: "Bob mass equals 1 kg"
+    verification: "Verify inertia-defined body mass"
+  
+  - criterion: "Gravity is [0, -9.81, 0]"
+    verification: "Check option gravity attribute"
+  
+  - criterion: "Initial angle is +90° from vertical"
+    verification: "Verify joint initial value or body position"
+  
+  - criterion: "Initial angular velocity is 0 rad/s"
+    verification: "Check velocity initialization"
+  
+  - criterion: "Energy computation enabled"
+    verification: "Check option flags for energy computation"
+  
+  - criterion: "Valid MuJoCo XML"
+    verification: "XML syntax correctness and schema compliance"
+
+success_metrics:
+  - Model must simulate without errors
+  - Energy values must be computable
+  - Joint motion must be physically realistic
+  - All parameters within specified tolerances
+
+notes: |
+  This is a reference task for testing MuJoCo model generation with an OpenCode agent.
+  The model represents a simple but physically accurate pendulum system suitable for
+  dynamics simulation and control studies.

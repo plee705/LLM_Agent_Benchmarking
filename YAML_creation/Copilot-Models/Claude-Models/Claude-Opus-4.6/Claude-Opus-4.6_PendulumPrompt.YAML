@@ -1,0 +1,118 @@
+---
+agent_type: OpenCode
+model: Gemma-4-26B
+task_name: MuJoCo Simple Ideal Pendulum
+task_description: Generate a valid MuJoCo XML model of a simple ideal pendulum
+
+coordinate_system:
+  x_axis: "right"
+  y_axis: "upward"
+  z_axis: "out of page"
+
+pendulum_specification:
+  type: "ideal pendulum"
+  components:
+    - name: "hinge joint"
+      location: [0, 1, 0]
+      location_unit: "m"
+      rotation_axis: "z-axis only"
+      damping: 0
+      friction: 0
+      losses: 0
+    
+    - name: "rod"
+      length: 0.2485
+      length_unit: "m"
+      mass: 0
+      mass_unit: "kg"
+      collision: "disabled"
+      description: "Massless rod connecting hinge to bob"
+    
+    - name: "bob"
+      shape: "sphere"
+      diameter: 0.1
+      diameter_unit: "m"
+      mass: 1.0
+      mass_unit: "kg"
+      description: "Weighted spherical bob at end of rod"
+
+environment_parameters:
+  gravity: [0, -9.81, 0]
+  gravity_unit: "m/s²"
+
+initial_conditions:
+  pendulum_orientation: "horizontal"
+  bob_position_direction: "+x direction from hinge"
+  initial_angle: 90
+  initial_angle_unit: "degrees from vertical"
+  initial_angular_velocity: 0
+  initial_angular_velocity_unit: "rad/s"
+
+mujoco_requirements:
+  - "Enable energy computation"
+  - "Produce valid MuJoCo XML model"
+  - "Use SI units throughout"
+  - "Create valid XML structure with proper MuJoCo tags"
+
+acceptance_criteria:
+  joint_count: 1
+  joint_type: "hinge"
+  joint_rotation_axis: "z-axis only"
+  rod_length: 0.2485
+  rod_length_unit: "m"
+  rod_mass: 0
+  rod_mass_unit: "kg"
+  bob_mass: 1.0
+  bob_mass_unit: "kg"
+  bob_shape: "sphere"
+  bob_diameter: 0.1
+  bob_diameter_unit: "m"
+  gravity: [0, -9.81, 0]
+  gravity_unit: "m/s²"
+  initial_angle: 90
+  initial_angle_unit: "degrees"
+  initial_angular_velocity: 0
+  initial_angular_velocity_unit: "rad/s"
+  energy_computation: "enabled"
+
+prompt_instructions: |
+  Generate a complete, valid MuJoCo XML model of a simple ideal pendulum with the following specifications:
+  
+  1. COORDINATE SYSTEM:
+     - +x = right
+     - +y = upward
+     - +z = out of page
+  
+  2. HINGE JOINT:
+     - Location: [0, 1, 0] m
+     - Rotation axis: z-axis only
+     - No damping, friction, or losses
+  
+  3. ROD:
+     - Length: 0.2485 m
+     - Mass: 0 kg (massless)
+     - Collision: disabled
+  
+  4. BOB (weighted sphere):
+     - Shape: sphere
+     - Diameter: 0.1 m
+     - Mass: 1.0 kg
+  
+  5. ENVIRONMENT:
+     - Gravity: [0, -9.81, 0] m/s²
+  
+  6. INITIAL CONDITIONS:
+     - Pendulum starts horizontal (bob in +x direction)
+     - Initial angle: +90° from vertical
+     - Initial angular velocity: 0 rad/s
+  
+  7. MUJOCO CONFIGURATION:
+     - Enable energy computation
+     - Use SI units throughout
+     - Create valid, well-formed XML
+  
+  The output must be a valid MuJoCo XML model file that can be loaded and simulated directly.
+
+output_format: "MuJoCo XML model"
+output_filename: "simple_ideal_pendulum.xml"
+validation_required: true

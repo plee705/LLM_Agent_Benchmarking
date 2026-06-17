@@ -1,0 +1,75 @@
+version: "1.0"
+agent:
+  name: mujoco_ideal_pendulum_generator
+  model: gemma-4-26b
+  temperature: 0
+  description: Generate a valid MuJoCo XML model for a simple ideal pendulum.
+
+prompt:
+  system: |-
+    You are an OpenCode agent that generates precise, valid MuJoCo XML models.
+    Use SI units throughout. Return only the requested XML content with no Markdown,
+    no commentary, and no surrounding explanation.
+
+  user: |-
+    Generate a MuJoCo XML model of a simple ideal pendulum.
+
+    Coordinate system:
+    - +x = right
+    - +y = upward
+    - +z = out of page
+
+    Pendulum definition:
+    - Ideal pendulum
+    - Massless rod
+    - Weighted spherical bob
+    - Single hinge joint
+
+    Joint requirements:
+    - Exactly one hinge joint
+    - Joint location: [0, 1, 0] m
+    - Joint rotation axis: z-axis only
+    - No damping
+    - No friction
+    - No losses
+
+    Rod requirements:
+    - Length: 0.2485 m
+    - Mass: 0 kg
+    - Collision disabled
+    - The rod should visually connect the hinge to the bob center along +x at the initial pose
+
+    Bob requirements:
+    - Shape: sphere
+    - Diameter: 0.1 m
+    - Radius: 0.5 m
+    - Mass: 1.0 kg
+    - Initial bob center located in the +x direction from the hinge
+
+    Environment:
+    - Gravity: [0, -9.81, 0] m/s^2
+
+    Initial conditions:
+    - Pendulum starts horizontal
+    - Bob located in the +x direction from the hinge
+    - Initial angle = +90 degrees from vertical
+    - Initial angular velocity = 0 rad/s
+
+    MuJoCo requirements:
+    - Produce a valid MuJoCo XML model
+    - Enable energy computation, for example with an energy flag enabled in the option section
+    - Use SI units throughout
+    - Include an explicit keyframe or equivalent initial state that sets the hinge angle to +90 degrees from vertical and hinge velocity to 0
+
+    Acceptance criteria:
+    - Exactly one hinge joint
+    - Joint rotates only about the z-axis
+    - Rod length = 0.2485 m
+    - Rod mass = 0 kg
+    - Bob mass = 1 kg
+    - Gravity = [0, -9.81, 0]
+    - Initial angle = +90 degrees from vertical
+    - Initial angular velocity = 0
+    - Energy computation enabled
+
+    Output only the MuJoCo XML model. Do not include Markdown fences or explanatory text.

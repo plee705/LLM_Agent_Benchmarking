@@ -1,0 +1,60 @@
+filename: ChatGPT-5.4-Instant_PendulumPrompt.YAML
+model: gemma-4-26b
+task: generate_mujoco_model
+description: |
+  Generate a MuJoCo XML model of a simple ideal pendulum with the following specifications.
+
+requirements:
+  coordinate_system:
+    x: right
+    y: upward
+    z: out_of_page
+
+  pendulum:
+    type: ideal
+    rod:
+      length: 0.2485
+      mass: 0.0
+      collision: disabled
+    bob:
+      shape: sphere
+      diameter: 0.1
+      mass: 1.0
+
+  joint:
+    type: hinge
+    location: [0, 1, 0]
+    axis: [0, 0, 1]
+    damping: 0.0
+    friction: 0.0
+    losses: none
+
+  environment:
+    gravity: [0, -9.81, 0]
+
+  initial_conditions:
+    description: pendulum starts horizontal in +x direction
+    angle_from_vertical_deg: 90
+    angular_velocity: 0.0
+
+  mujoco:
+    units: SI
+    energy_computation: enabled
+    constraints:
+      - exactly_one_hinge_joint
+      - rotation_only_about_z_axis
+      - rod_mass_zero
+      - rod_length_exact
+      - bob_mass_exact
+      - gravity_exact
+      - initial_angle_90_deg
+      - initial_angular_velocity_zero
+
+output_format:
+  type: xml
+  validator: mujoco
+  instructions:
+    - produce_valid_mujoco_xml
+    - include_energy_computation
+    - ensure_all_constraints_met
+    - no_additional_text

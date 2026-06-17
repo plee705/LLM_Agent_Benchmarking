@@ -1,0 +1,94 @@
+"$schema": "https://opencode.ai/config.json"
+model: "ollama/gemma4:26b"
+small_model: "ollama/gemma4:26b"
+agent:
+  mujoco-pendulum-generator:
+    description: "Generate a valid MuJoCo XML model of a simple ideal pendulum."
+    mode: "primary"
+    model: "ollama/gemma4:26b"
+    temperature: 0
+    permission:
+      read: "allow"
+      edit: "allow"
+      bash:
+        "*": "ask"
+        "python*": "allow"
+        "xmllint*": "allow"
+    prompt: |-
+      Generate a single valid MuJoCo XML file named `pendulum.xml` for a simple ideal pendulum.
+
+      Use SI units throughout.
+
+      Coordinate system:
+      - +x = right
+      - +y = upward
+      - +z = out of page
+
+      Required physical model:
+      - Ideal pendulum.
+      - Massless rod.
+      - Weighted spherical bob.
+      - Exactly one joint, and it must be a hinge joint.
+      - No damping, no joint friction, no armature losses, no actuators, no motors, no equality constraints, and no other non-conservative losses.
+
+      Environment:
+      - Gravity must be exactly `0 -9.81 0` m/s^2.
+      - Enable MuJoCo energy computation using `<flag energy="enable"/>` inside `<option>` or an equivalent valid MuJoCo XML setting.
+
+      Hinge joint requirements:
+      - Hinge location in world coordinates: `[0, 1, 0]` m.
+      - Hinge rotation axis: z-axis only, encoded as `axis="0 0 1"`.
+      - Hinge must be unrestricted unless MuJoCo requires otherwise.
+      - Hinge damping must be `0`.
+      - Hinge friction loss must be `0`.
+      - Hinge armature must be `0` if specified.
+      - The model must contain no other joints of any type.
+
+      Rod requirements:
+      - Rod length must be exactly `0.2485` m, measured from the hinge center to the bob center.
+      - Rod mass must be exactly `0` kg.
+      - Rod collision must be disabled with `contype="0"` and `conaffinity="0"`, or an equivalent valid MuJoCo collision-disabled configuration.
+      - The bob diameter is larger than the rod length; do not shorten or offset the rod to avoid visual overlap with the bob. The specified rod length remains the hinge-to-bob-center distance.
+
+      Bob requirements:
+      - Shape: sphere.
+      - Diameter: `0.1` m.
+      - Radius/size in MuJoCo: `0.5` m.
+      - Mass: `1.0` kg.
+      - Bob center must be at the end of the massless rod.
+
+      Initial conditions:
+      - Pendulum starts horizontal with the bob in the +x direction from the hinge.
+      - Initial bob center world position must be `[0.2485, 1, 0]` m.
+      - Initial angle must be `+90 deg` from the downward vertical equilibrium direction.
+      - Encode the initial angle in radians as `1.5707963267948966`.
+      - Initial angular velocity must be `0` rad/s.
+      - Include a MuJoCo `<keyframe>` named `initial_horizontal_plus_x` with `qpos="1.5707963267948966"` and `qvel="0"`.
+
+      Preferred MuJoCo modeling convention:
+      - Place the pendulum body at the hinge using `<body pos="0 1 0">`.
+      - Put the single hinge joint at local body position `0 0 0` with axis `0 0 1`.
+      - Define the zero-angle geometry along local negative y, so that qpos = 0 places the bob vertically below the hinge.
+      - Place the bob sphere at local position `0 -0.2485 0`.
+      - Use the initial keyframe qpos = +pi/2 so that the bob starts at world +x from the hinge.
+
+      Required output behavior:
+      - Create or return only the MuJoCo XML content for `pendulum.xml`.
+      - Do not include Markdown fences.
+      - Do not include explanatory prose.
+      - Do not include extra files.
+      - Do not add ground, cameras, lights, sensors, actuators, tendons, or decorative elements unless strictly necessary for XML validity.
+
+      Acceptance checklist the XML must satisfy:
+      - The XML parses as valid MuJoCo XML.
+      - Exactly one hinge joint exists.
+      - The hinge axis is exactly `0 0 1`.
+      - The hinge is located at `[0, 1, 0]` m in world coordinates.
+      - Gravity is exactly `0 -9.81 0`.
+      - Energy computation is enabled.
+      - Rod length is exactly `0.2485` m.
+      - Rod mass is exactly `0` kg.
+      - Rod collision is disabled.
+      - Bob is a sphere with diameter `0.1` m and mass `1.0` kg.
+      - Initial angle is `+90 deg` from vertical, encoded as `qpos = 1.5707963267948966`.
+      - Initial angular velocity is `qvel = 0`.

@@ -1,0 +1,64 @@
+name: ideal_pendulum_mujoco_xml_generation
+version: 1.0
+agent: OpenCode
+model: gemma-4-26b
+
+task: |
+  Generate a valid MuJoCo XML model of a simple ideal pendulum using SI units.
+
+instructions:
+  coordinate_system:
+    x: right
+    y: upward
+    z: out_of_page
+
+  pendulum_definition:
+    type: ideal_pendulum
+    rod:
+      description: massless_rod
+      length_m: 0.2485
+      mass_kg: 0.0
+      collision: disabled
+    bob:
+      shape: sphere
+      diameter_m: 0.1
+      mass_kg: 1.0
+    joint:
+      type: hinge
+      count: 1
+      location_m: [0.0, 1.0, 0.0]
+      axis: [0.0, 0.0, 1.0]
+      damping: 0.0
+      frictionloss: 0.0
+      losses: none
+
+  environment:
+    gravity_m_per_s2: [0.0, -9.81, 0.0]
+
+  initial_conditions:
+    orientation:
+      description: pendulum_starts_horizontal_with_bob_in_positive_x_from_hinge
+      angle_from_vertical_deg: 90.0
+      sign_convention: positive
+    angular_velocity_rad_per_s: 0.0
+
+  mujoco_requirements:
+    valid_xml: true
+    enable_energy_computation: true
+    si_units_only: true
+
+acceptance_criteria:
+  - exactly_one_hinge_joint
+  - hinge_rotates_only_about_z_axis
+  - rod_length_m_equals_0_2485
+  - rod_mass_kg_equals_0
+  - bob_mass_kg_equals_1
+  - gravity_equals_[0,-9.81,0]
+  - initial_angle_equals_positive_90_deg_from_vertical
+  - initial_angular_velocity_equals_0_rad_per_s
+  - energy_computation_enabled
+
+output_contract:
+  response_format: mujoco_xml
+  return_only_xml: true
+  disallow_explanations: true

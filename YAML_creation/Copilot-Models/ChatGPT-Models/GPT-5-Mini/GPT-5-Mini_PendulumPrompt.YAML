@@ -1,0 +1,99 @@
+name: GPT-5-Mini_PendulumPrompt
+model: Gemma-4-26B
+description: |
+  Prompt for an OpenCode agent (Gemma-4 26B) to generate a MuJoCo XML model
+  of a simple ideal pendulum. The agent must output only a single MuJoCo XML
+  document (no surrounding explanation or metadata) that exactly meets the
+  specifications and acceptance criteria below.
+language: en
+prompt: |
+  You are an OpenCode agent using the Gemma-4 26B model. Generate a single,
+  valid MuJoCo XML file (UTF-8 text) that models an ideal pendulum. Follow
+  these requirements exactly. Do not include any text before or after the
+  XML — return only the XML content.
+
+  Coordinate system:
+  - +x = right
+  - +y = upward
+  - +z = out of page
+
+  Pendulum definition:
+  - Ideal pendulum (massless rod, weighted spherical bob)
+  - Single hinge joint only
+
+  Joint:
+  - Type: hinge
+  - Location: [0, 1, 0] meters (world coordinates)
+  - Rotation axis: z-axis only (axis = [0, 0, 1])
+  - No damping, no friction, no losses
+
+  Rod:
+  - Length: 0.2485 m
+  - Mass: 0 kg
+  - Collision: disabled (rod must not participate in collision)
+
+  Bob:
+  - Shape: sphere
+  - Diameter: 0.1 m
+  - Mass: 1.0 kg
+
+  Environment:
+  - Gravity vector (SI): [0, -9.81, 0] m/s^2
+
+  Initial conditions:
+  - Pendulum starts horizontal with the bob located in the +x direction
+    from the hinge (i.e., initial angle = +90° from vertical)
+  - Initial angular velocity = 0 rad/s
+
+  MuJoCo requirements:
+  - Enable energy computation in the model (ensure MuJoCo energy calculation
+    is active or include the appropriate option/sensor so energy can be
+    computed).
+  - Use SI units throughout.
+  - Produce a valid MuJoCo XML model that can be loaded by MuJoCo.
+
+  Acceptance criteria (the generated XML must satisfy all):
+  1) Exactly one hinge joint in the model.
+  2) The hinge joint rotates only about the z-axis.
+  3) Rod length equals 0.2485 m.
+  4) Rod mass equals 0 kg.
+  5) Bob mass equals 1.0 kg.
+  6) Gravity equals [0, -9.81, 0].
+  7) Initial joint angle equals +90° from vertical (i.e. bob positioned at
+     +x from hinge). Specify initial joint position as +pi/2 radians.
+  8) Initial angular velocity equals 0.
+  9) Energy computation is enabled.
+
+  Output format requirements:
+  - Return only the MuJoCo XML document text (no YAML, JSON, or extra
+    commentary). The XML should be well-formed and ready to save as a
+    `.xml` file.
+  - Use clear, explicit attributes for joint axis, joint position, body
+    positions, geom sizes, masses, and any option enabling energy.
+
+  Additional notes for generation:
+  - The hinge joint must be placed at world coordinates [0, 1, 0]. Use
+    a parent body located at that position, then attach the hinge to allow
+    rotation about the local z-axis.
+  - Represent the rod as a collision-disabled visual geometry or a body
+    with zero mass and collisions turned off (explicitly set `contype` and
+    `conaffinity` to 0 or otherwise disable collisions for the rod geom).
+  - Place the spherical bob at a distance of 0.2485 m along +x from the
+    hinge pivot.
+  - Set the bob's sphere diameter to 0.1 m and mass to 1.0 kg.
+  - Explicitly set the model's gravity to `0 -9.81 0` and ensure SI units.
+  - Set the initial joint position (`qpos`) to +pi/2 radians and initial
+    joint velocity (`qvel`) to 0. If MuJoCo XML requires a specific tag
+    for initial state, include it (for example a top-level `<state>` with
+    `qpos` and `qvel` entries) so a loader can initialize the system.
+
+save_filename: GPT-5-Mini_PendulumPrompt.YAML
+usage: |
+  This YAML is an OpenCode ingestion prompt. When executed, the agent should
+  return a single MuJoCo XML model file meeting the above constraints.
+
+tags:
+  - mujoco
+  - pendulum
+  - physics
+  - opencode

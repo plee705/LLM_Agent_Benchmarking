@@ -1,0 +1,53 @@
+model: gemma-4-26b
+temperature: 0.0
+max_tokens: 2048
+messages:
+  - role: system
+    content: |
+      You are an expert MuJoCo XML model generator.
+      Output strictly valid MuJoCo XML enclosed in a single <mujoco> root element.
+      Use SI units.
+      Do not output any explanation, comments, or code fences—only the XML text.
+  - role: user
+    content: |
+      Generate a MuJoCo XML model of an ideal pendulum with the following exact specifications.
+
+      Coordinate System:
+        +x = right
+        +y = upward
+        +z = out of page
+
+      Joint:
+        type = hinge
+        pos  = 0 1 0
+        axis = 0 0 1
+        damping = 0
+        frictionloss = 0
+
+      Rod:
+        length = 0.2485   # metres
+        mass   = 0        # kg (massless)
+        collision = disabled
+
+      Bob:
+        shape = sphere
+        diameter = 0.1    # metres
+        mass = 1.0        # kg
+
+      Environment:
+        gravity = 0 -9.81 0  # m/s²
+        energy computation enabled  # use <stat energy="true"/>
+
+      Initial Conditions (keyframe "init"):
+        angle = +90 deg from vertical (bob along +x direction)
+        angular velocity = 0 rad/s
+
+      Acceptance criteria (must be met exactly):
+        - Exactly one hinge joint rotating only about z-axis
+        - Rod length 0.2485 m, mass 0 kg
+        - Bob mass 1 kg, diameter 1 m
+        - Gravity 0 -9.81 0
+        - Initial angle +90°, initial angular velocity 0
+        - <stat energy="true"/> present
+
+      Remember: Output *only* the MuJoCo XML model, nothing else.

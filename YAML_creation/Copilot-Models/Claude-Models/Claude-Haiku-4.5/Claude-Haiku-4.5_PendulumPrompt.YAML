@@ -1,0 +1,75 @@
+---
+agent: OpenCode
+model: Gemma-4-26B
+task: "Generate MuJoCo XML Model for Ideal Pendulum"
+
+objective: |
+  Create a valid MuJoCo XML configuration file that simulates a simple ideal pendulum.
+  The model must include a massless rod with a spherical weighted bob, suspended from a 
+  single hinge joint at the origin. The simulation should use realistic physics parameters 
+  and be ready for dynamics computation.
+
+coordinate_system:
+  x_axis: "right"
+  y_axis: "upward"
+  z_axis: "out of page"
+
+pendulum_specification:
+  type: "ideal_pendulum"
+  rod_mass: 0  # kg (massless)
+  rod_length: 0.2485  # meters
+  collision_enabled: false
+  
+  joint:
+    location: [0, 1, 0]  # meters (hinge pivot point)
+    rotation_axis: "z-axis_only"
+    damping: 0  # no damping
+    friction: 0  # no friction
+    losses: 0  # no losses
+    
+  bob:
+    shape: "sphere"
+    diameter: 0.1  # meters
+    mass: 1.0  # kilograms
+
+environment:
+  gravity: [0, -9.81, 0]  # m/s² (downward)
+  energy_computation: true
+
+initial_conditions:
+  pendulum_orientation: "horizontal"
+  bob_position_direction: "positive_x"
+  initial_angle_from_vertical: 90  # degrees (+x direction)
+  initial_angular_velocity: 0  # rad/s
+
+mujoco_requirements:
+  - "Enable energy computation for the system"
+  - "Use SI units throughout (meters, kilograms, seconds)"
+  - "Produce valid MuJoCo XML that can be executed directly"
+  - "Define exactly one hinge joint with z-axis rotation only"
+  - "Use appropriate friction and damping values (0.0 for ideal system)"
+
+acceptance_criteria:
+  - "Exactly one hinge joint in the model"
+  - "Joint rotates only about the z-axis"
+  - "Rod length equals 0.2485 m"
+  - "Rod mass equals 0 kg"
+  - "Bob mass equals 1 kg"
+  - "Gravity vector is [0, -9.81, 0] m/s²"
+  - "Initial pendulum angle is +90° from vertical"
+  - "Initial angular velocity is 0 rad/s"
+  - "Energy computation is enabled in the model"
+  - "XML is valid and executable in MuJoCo"
+
+output_format:
+  type: "MuJoCo_XML"
+  file_extension: ".xml"
+  description: "Complete MuJoCo XML model file ready for simulation"
+
+additional_notes: |
+  - The hinge joint should be located at coordinates [0, 1, 0] in the world frame
+  - The rod should be massless (set mass to 0)
+  - The bob should be positioned at a distance of 0.2485 m from the hinge along the initial x-axis
+  - The model should start with the pendulum horizontal (90 degrees from vertical downward position)
+  - All parameters must use standard SI units
+  - The model should be suitable for energy analysis and dynamics computation

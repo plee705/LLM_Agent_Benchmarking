@@ -1,0 +1,87 @@
+name: Simple Ideal Pendulum MuJoCo Model
+model_type: mujoco_xml
+target_agent: OpenCode
+llm_model: Gemma-4-26B
+description: Generate a MuJoCo XML model of a simple ideal pendulum with specified properties
+
+coordinate_system:
+  x_axis: right
+  y_axis: upward
+  z_axis: out_of_page
+  units: meters
+
+physics_configuration:
+  gravity: [0, -9.81, 0]
+  enable_energy_computation: true
+
+pendulum_specification:
+  type: ideal_pendulum
+  description: Massless rod with weighted spherical bob
+
+hinge_joint:
+  location: [0, 1, 0]
+  rotation_axis: z
+  damping: 0
+  friction: 0
+  losses: 0
+  initial_angle_degrees: 90
+  initial_angle_description: "Horizontal position (+x direction from hinge)"
+  initial_angular_velocity: 0
+
+rod:
+  length_meters: 0.2485
+  mass_kg: 0
+  material_type: massless
+  collision: disabled
+
+bob:
+  shape: sphere
+  diameter_meters: 0.1
+  mass_kg: 1.0
+  collision: enabled
+  initial_position_relative: "x direction at distance 0.2485m from hinge"
+
+acceptance_criteria:
+  - exactly_one_hinge_joint: true
+  - joint_rotation_z_axis_only: true
+  - rod_length_m: 0.2485
+  - rod_mass_kg: 0
+  - bob_mass_kg: 1.0
+  - gravity: [0, -9.81, 0]
+  - initial_angle_degrees: 90
+  - initial_angular_velocity: 0
+  - energy_computation_enabled: true
+  - valid_mujoco_xml: true
+  - si_units_throughout: true
+
+output_requirements:
+  format: MuJoCo XML
+  validation: Must be valid MuJoCo XML that can be loaded and simulated
+  filename_suggestion: "simple_pendulum.xml"
+
+task_instructions: |
+  Generate a complete and valid MuJoCo XML model file for an ideal pendulum system.
+  
+  The model must satisfy all the acceptance criteria listed above.
+  
+  The pendulum consists of:
+  1. A massless rod of length 0.2485 meters
+  2. A spherical bob of 1.0 kg mass and 0.1 meter diameter
+  3. A single hinge joint located at [0, 1, 0] meters
+  
+  The hinge joint must:
+  - Allow rotation only about the z-axis
+  - Have no damping, friction, or losses
+  - Be configured with initial angle of 90 degrees (horizontal position)
+  - Have zero initial angular velocity
+  
+  The coordinate system uses:
+  - +x pointing right
+  - +y pointing upward
+  - +z pointing out of the page
+  
+  Gravity must be set to [0, -9.81, 0] m/s².
+  
+  Energy computation must be enabled in the model configuration.
+  
+  Return only the valid MuJoCo XML model file content that meets all specifications.

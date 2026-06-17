@@ -1,0 +1,97 @@
+---
+agent_type: OpenCode
+model: Gemma-4 26B
+task_name: MuJoCo Simple Ideal Pendulum Generator
+description: Generate a valid MuJoCo XML model for a simple ideal pendulum with specified parameters
+
+task_details: |
+  Create a MuJoCo XML model of a simple ideal pendulum system with the following specifications.
+
+coordinate_system: |
+  - +x = right
+  - +y = upward
+  - +z = out of page
+
+pendulum_definition: |
+  - Type: Ideal pendulum
+  - Components:
+    - Massless rod
+    - Weighted spherical bob
+    - Single hinge joint
+
+joint_specifications:
+  location: [0, 1, 0]
+  location_unit: meters
+  rotation_axis: z-axis
+  rotation_axis_description: Only rotation about z-axis is allowed
+  damping: 0
+  friction: 0
+  losses: 0
+
+rod_specifications:
+  length: 0.2485
+  length_unit: meters
+  mass: 0
+  mass_unit: kilograms
+  collision_enabled: false
+
+bob_specifications:
+  shape: sphere
+  diameter: 0.1
+  diameter_unit: meters
+  mass: 1.0
+  mass_unit: kilograms
+
+environment:
+  gravity: [0, -9.81, 0]
+  gravity_unit: m/s²
+
+initial_conditions:
+  pendulum_position: horizontal
+  bob_direction: +x direction from hinge
+  initial_angle: 90
+  initial_angle_unit: degrees from vertical
+  initial_angular_velocity: 0
+  initial_angular_velocity_unit: rad/s
+
+mujoco_requirements:
+  - Enable energy computation
+  - Produce valid MuJoCo XML model
+  - Use SI units throughout
+  - Include proper model structure with worldbody and body elements
+  - Define hinge joint with appropriate axis constraints
+  - Set up geom elements for collision detection (rod collision disabled, bob collision enabled)
+
+acceptance_criteria:
+  - Exactly one hinge joint present
+  - Joint rotates only about z-axis
+  - Rod length equals 0.2485 m
+  - Rod mass equals 0 kg
+  - Bob mass equals 1.0 kg
+  - Gravity vector is [0, -9.81, 0]
+  - Initial angle is +90° from vertical
+  - Initial angular velocity is 0 rad/s
+  - Energy computation is enabled in model options
+
+output_format: |
+  Return ONLY the valid MuJoCo XML model code.
+  
+  The XML should include:
+  1. XML declaration and DOCTYPE
+  2. mujoco root element with default settings
+  3. option element with timestep and energy computation enabled
+  4. worldbody element containing:
+     - Body for the hinge joint location
+     - Body for the rod
+     - Body for the bob (sphere geom)
+  5. Proper positioning and mass definitions
+  6. Hinge joint definition with z-axis constraint
+  7. Initial conditions through qpos (joint position) and qvel (joint velocity) if applicable
+
+additional_notes: |
+  - The pendulum should be a simple two-body system (rod + bob)
+  - The rod should be massless but provide structural connection
+  - The bob should be the only massive component
+  - The hinge joint should allow free rotation about the z-axis only
+  - No damping, friction, or energy losses
+  - The system should be ready for physics simulation with MuJoCo

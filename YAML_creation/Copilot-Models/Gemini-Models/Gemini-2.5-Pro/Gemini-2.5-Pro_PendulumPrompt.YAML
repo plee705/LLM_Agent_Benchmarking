@@ -1,0 +1,48 @@
+model_name: Gemma-4 26B
+task: Generate a MuJoCo XML model of a simple ideal pendulum.
+requirements:
+  coordinate_system:
+    x_axis: "+x = right"
+    y_axis: "+y = upward"
+    z_axis: "+z = out of page"
+  pendulum_definition:
+    type: Ideal pendulum
+    rod: Massless
+    bob: Weighted spherical
+    joint: Single hinge
+  joint:
+    location: [0, 1, 0]
+    rotation_axis: z-axis
+    damping: false
+    friction: false
+    losses: false
+  rod:
+    length: 0.2485
+    mass: 0
+    collision: disabled
+  bob:
+    shape: sphere
+    diameter: 0.1
+    mass: 1.0
+  environment:
+    gravity: [0, -9.81, 0]
+  initial_conditions:
+    start_position: horizontal
+    bob_direction: "+x direction from hinge"
+    initial_angular_velocity: 0
+  mujoco_requirements:
+    energy_computation: enabled
+    output_format: valid MuJoCo XML
+    units: SI
+  acceptance_criteria:
+    - "Exactly one hinge joint"
+    - "Joint rotates only about z-axis"
+    - "Rod length = 0.2485 m"
+    - "Rod mass = 0 kg"
+    - "Bob mass = 1 kg"
+    - "Gravity = [0, -9.81, 0]"
+    - "Initial angle = +90° from vertical"
+    - "Initial angular velocity = 0"
+    - "Energy computation enabled"
+output:
+  - "Return only the YAML file intended for OpenCode ingestion."

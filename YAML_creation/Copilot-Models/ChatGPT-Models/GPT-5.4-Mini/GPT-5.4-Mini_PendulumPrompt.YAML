@@ -1,0 +1,62 @@
+name: GPT-5.4-Mini Pendulum Prompt
+model: gemma-4-26b
+task: |
+  Generate a valid MuJoCo XML model of a simple ideal pendulum.
+
+instructions: |
+  Create a MuJoCo XML model that satisfies all requirements below.
+
+  Coordinate system:
+  - +x = right
+  - +y = upward
+  - +z = out of page
+
+  Pendulum definition:
+  - Ideal pendulum
+  - Massless rod
+  - Weighted spherical bob
+  - Single hinge joint
+
+  Joint:
+  - Location: [0, 1, 0] m
+  - Rotation axis: z-axis only
+  - No damping
+  - No friction
+  - No losses
+
+  Rod:
+  - Length: 0.2485 m
+  - Mass: 0 kg
+  - Collision disabled
+
+  Bob:
+  - Shape: sphere
+  - Diameter: 0.1 m
+  - Mass: 1.0 kg
+
+  Environment:
+  - Gravity: [0, -9.81, 0] m/s^2
+
+  Initial conditions:
+  - Pendulum starts horizontal
+  - Bob located in the +x direction from the hinge
+  - Initial angular velocity = 0 rad/s
+
+  MuJoCo requirements:
+  - Enable energy computation
+  - Produce a valid MuJoCo XML model
+  - Use SI units throughout
+
+acceptance_criteria:
+  - Exactly one hinge joint
+  - Joint rotates only about z-axis
+  - Rod length = 0.2485 m
+  - Rod mass = 0 kg
+  - Bob mass = 1 kg
+  - Gravity = [0, -9.81, 0]
+  - Initial angle = +90 degrees from vertical
+  - Initial angular velocity = 0
+  - Energy computation enabled
+
+output_requirements: |
+  Return only the MuJoCo XML model. Do not add commentary, markdown, code fences, or explanations.

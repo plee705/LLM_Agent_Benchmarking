@@ -1,0 +1,116 @@
+name: standard_ideal_pendulum_mujoco_xml
+model: gemma-4-26b
+description: >-
+  Prompt for an OpenCode agent to generate a valid MuJoCo XML model of a
+  simple ideal pendulum using SI units.
+
+task:
+  role: opencode_agent
+  objective: >-
+    Generate a complete, valid MuJoCo XML model for a simple ideal pendulum.
+    Return only the MuJoCo XML content as the final generated artifact.
+
+coordinate_system:
+  x_positive: right
+  y_positive: upward
+  z_positive: out_of_page
+
+physical_system:
+  type: ideal_pendulum
+  units: SI
+  hinge:
+    location_m: [0.0, 1.0, 0.0]
+    joint_type: hinge
+    rotation_axis: [0.0, 0.0, 1.0]
+    damping: 0.0
+    frictionloss: 0.0
+    losses: none
+  rod:
+    type: massless_rod
+    length_m: 0.2485
+    mass_kg: 0.0
+    collision_enabled: false
+  bob:
+    shape: sphere
+    diameter_m: 0.1
+    radius_m: 0.5
+    mass_kg: 1.0
+  environment:
+    gravity_mps2: [0.0, -9.81, 0.0]
+
+initial_conditions:
+  configuration: horizontal
+  bob_direction_from_hinge: +x
+  angle_from_vertical_deg: 90.0
+  joint_position_rad: 1.5707963267948966
+  joint_velocity_rad_per_s: 0.0
+
+mujoco_requirements:
+  enable_energy_computation: true
+  valid_xml: true
+  units: SI
+  constraints:
+    - Use exactly one hinge joint.
+    - The hinge joint must be located at [0, 1, 0] meters.
+    - "The hinge joint axis must be exactly the z-axis: [0, 0, 1]."
+    - Do not add joint damping, joint friction, actuator losses, or passive losses.
+    - Represent the rod as massless with mass exactly 0 kg.
+    - Disable rod collision.
+    - Set the rod length to exactly 0.2485 m.
+    - Represent the bob as a sphere with diameter exactly 0.1 m.
+    - Set the bob mass to exactly 1.0 kg.
+    - Set gravity to exactly [0, -9.81, 0] m/s^2.
+    - Initialize the pendulum horizontal with the bob in the +x direction from the hinge.
+    - Set initial angular velocity to exactly 0 rad/s.
+    - Enable MuJoCo energy computation using the appropriate option flag.
+
+implementation_guidance:
+  geometry:
+    - >-
+      Place the hinge body at [0, 1, 0]. Define a child body whose frame rotates
+      about the z-axis at the hinge.
+    - >-
+      Place the bob center 0.2485 m from the hinge along the local +x direction
+      when the joint coordinate is at its initial value.
+    - >-
+      Because the bob diameter is 0.1 m and the pendulum rod length is 0.2485 m,
+      the hinge is inside the bob volume. Preserve the requested numeric
+      definitions exactly rather than modifying the geometry to avoid overlap.
+    - >-
+      If a visual rod is included, make it non-colliding and massless. Do not let
+      the visual rod alter the inertial properties of the system.
+  mujoco_xml:
+    - >-
+      Use <option gravity="0 -9.81 0" energy="enable"/> or the MuJoCo-equivalent
+      syntax for enabling energy computation.
+    - >-
+      Use a single <joint type="hinge" axis="0 0 1" damping="0" frictionloss="0"/>.
+    - >-
+      Use a sphere geom for the bob with size="0.5" and mass="1.0".
+    - >-
+      Set initial joint position and velocity in <keyframe> so qpos is pi/2 and
+      qvel is 0, unless using another valid MuJoCo initialization mechanism.
+
+acceptance_criteria:
+  exactly_one_hinge_joint: true
+  joint_rotates_only_about_z_axis: true
+  hinge_location_m: [0.0, 1.0, 0.0]
+  rod_length_m: 0.2485
+  rod_mass_kg: 0.0
+  rod_collision_enabled: false
+  bob_shape: sphere
+  bob_diameter_m: 0.1
+  bob_mass_kg: 1.0
+  gravity_mps2: [0.0, -9.81, 0.0]
+  initial_angle_from_vertical_deg: 90.0
+  initial_bob_direction_from_hinge: +x
+  initial_angular_velocity_rad_per_s: 0.0
+  energy_computation_enabled: true
+  valid_mujoco_xml: true
+
+output_contract:
+  final_response_format: xml_only
+  include_explanations: false
+  include_markdown_fences: false
+  include_comments: false
+  generated_file_goal: simple_ideal_pendulum.xml

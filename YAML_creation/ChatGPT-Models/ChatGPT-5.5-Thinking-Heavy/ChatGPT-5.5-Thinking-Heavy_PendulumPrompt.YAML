@@ -1,0 +1,89 @@
+$schema: "https://opencode.ai/config.json"
+agent:
+  mujoco_pendulum_generator:
+    description: "Generate a valid MuJoCo XML model of a simple ideal pendulum."
+    mode: primary
+    model: "google/gemma-4-26B-A4B-it"
+    temperature: 0.0
+    permission:
+      read: allow
+      edit: allow
+      bash: allow
+    prompt: |
+      You are an OpenCode agent. Generate a valid MuJoCo XML model of a simple ideal pendulum using SI units throughout.
+
+      Create or overwrite exactly one MJCF output file named `ideal_pendulum.xml`.
+      Do not add prose, markdown, explanatory notes, or extra files unless they are needed for validation.
+
+      Coordinate system:
+      - +x = right
+      - +y = upward
+      - +z = out of page
+
+      Physical model:
+      - Ideal pendulum.
+      - One massless rod.
+      - One weighted spherical bob.
+      - Exactly one hinge joint.
+      - No actuators, tendons, motors, controls, contacts, damping losses, friction losses, joint limits, or other dissipative mechanisms.
+
+      Environment:
+      - Gravity must be exactly [0, -9.81, 0] m/s^2.
+      - Enable MuJoCo energy computation, e.g. with `<option energy="enable" .../>`.
+
+      Hinge joint requirements:
+      - Location: [0, 1, 0] m in world coordinates.
+      - Type: hinge.
+      - Axis: z-axis only, exactly [0, 0, 1].
+      - Damping: 0.
+      - Friction loss: 0.
+      - Armature: 0.
+      - Initial angular velocity: 0 rad/s.
+
+      Rod requirements:
+      - Length: 0.2485 m, interpreted as hinge-to-bob-center distance.
+      - Mass: 0 kg.
+      - Collision disabled, e.g. `contype="0" conaffinity="0"` if represented as a geom.
+      - The rod must not contribute to body mass or inertia.
+      - It may be a visual-only slender capsule, site pair, or other non-contact visual representation, but it must preserve the exact stated rod length.
+
+      Bob requirements:
+      - Shape: sphere.
+      - Diameter: 0.1 m, so radius must be 0.5 m.
+      - Mass: 1.0 kg.
+      - The bob center must be exactly one rod length from the hinge.
+
+      Initial condition requirements:
+      - Pendulum starts horizontal.
+      - Bob center starts in the +x direction from the hinge.
+      - Initial angle is +90 degrees from vertical.
+      - Initial angular velocity is 0 rad/s.
+      - Use radians in the MJCF state. The +90 degree initial angle must be represented as qpos = pi/2 = 1.5707963267948966, with qvel = 0.
+      - Recommended construction: define the pendulum body zero angle as vertical down, with bob center at local [0, -0.2485, 0] relative to the hinge; then set a keyframe or initial state with qpos = +pi/2. This makes the initial bob center world position [0.2485, 1, 0].
+
+      MuJoCo implementation requirements:
+      - Produce a single valid MJCF XML model.
+      - Use `<compiler angle="radian"/>` or otherwise ensure all angular values are radians.
+      - Use `<option gravity="0 -9.81 0" energy="enable"/>` or an equivalent valid option block.
+      - Use exactly one `<joint>` element, and it must be the required hinge joint.
+      - Do not use free, ball, slide, or additional hinge joints.
+      - Do not add ground, walls, equality constraints, damping, friction, losses, sensors, actuators, or plugins unless required for validity; if added, they must not alter the ideal pendulum dynamics or violate any acceptance criterion.
+      - Include a MuJoCo keyframe or other valid MJCF initial-state mechanism that sets qpos to 1.5707963267948966 and qvel to 0 for the single hinge DOF.
+      - The model must be dynamically valid despite the rod being massless; the bob must supply the entire 1.0 kg mass.
+
+      Acceptance criteria to self-check before finishing:
+      - Exactly one hinge joint exists.
+      - The joint rotates only about the z-axis.
+      - The hinge joint is located at [0, 1, 0] m.
+      - Rod length is exactly 0.2485 m.
+      - Rod mass is exactly 0 kg and rod collision is disabled.
+      - Bob is a sphere with diameter 0.1 m.
+      - Bob mass is exactly 1.0 kg.
+      - Gravity is exactly [0, -9.81, 0].
+      - Initial angle is +90 degrees from vertical, represented as qpos = 1.5707963267948966 rad.
+      - Initial angular velocity is 0 rad/s.
+      - Energy computation is enabled.
+      - XML is valid MJCF and uses SI units throughout.
+
+      Final response from the agent:
+      - Return only the generated MJCF XML content, with no surrounding markdown fences and no commentary.

@@ -1,0 +1,67 @@
+model: gemma-4-26b
+temperature: 0
+task: |
+Generate a valid MuJoCo XML model of a simple ideal pendulum using SI units throughout.
+
+Coordinate system:
++x: right
++y: upward
++z: out of page
+
+Physical model:
+- Ideal pendulum
+- Massless rod
+- Weighted spherical bob
+- Single hinge joint only
+
+Environment:
+gravity: [0, -9.81, 0] m/s^2
+
+Joint:
+location: [0, 1, 0] m
+type: hinge
+axis: [0, 0, 1]
+damping: 0
+frictionloss: 0
+armature: 0
+limited: false
+
+Rod:
+length: 0.2485 m
+mass: 0 kg
+collision: disabled
+
+Bob:
+shape: sphere
+diameter: 0.1 m
+radius: 0.5 m
+mass: 1.0 kg
+
+Initial conditions:
+- Pendulum starts horizontal
+- Bob is located in the +x direction from the hinge
+- Initial angle is +90 degrees from vertical
+- Initial angular velocity is 0 rad/s
+
+MuJoCo requirements:
+- Enable energy computation
+- Produce only valid MuJoCo XML
+- Use SI units throughout
+- Do not include explanatory text outside the XML
+
+Acceptance criteria:
+- Exactly one hinge joint
+- Joint rotates only about the z-axis
+- Rod length equals 0.2485 m
+- Rod mass equals 0 kg
+- Bob mass equals 1 kg
+- Gravity equals [0, -9.81, 0]
+- Initial angle equals +90 degrees from vertical
+- Initial angular velocity equals 0 rad/s
+- Energy computation is enabled
+
+output_requirements:
+format: xml
+return_only: true
+no_markdown: true
+no_explanation: true

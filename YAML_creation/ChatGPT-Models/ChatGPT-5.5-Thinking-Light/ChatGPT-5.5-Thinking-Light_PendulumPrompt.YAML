@@ -1,0 +1,69 @@
+model: gemma-4-26b
+agent: opencode
+prompt: |
+  Generate a valid MuJoCo XML model of a simple ideal pendulum using SI units throughout.
+
+  Coordinate system:
+    +x: right
+    +y: upward
+    +z: out of page
+
+  Physical model:
+    - The pendulum is ideal.
+    - It has a massless rod and a weighted spherical bob.
+    - It has exactly one hinge joint.
+    - The hinge joint is located at [0, 1, 0] m.
+    - The hinge joint rotates only about the z-axis.
+    - The hinge joint has no damping, no friction, and no losses.
+
+  Environment:
+    - Gravity must be [0, -9.81, 0] m/s^2.
+    - Enable MuJoCo energy computation.
+
+  Geometry and inertial properties:
+    Rod:
+      - Length: 0.2485 m.
+      - Mass: 0 kg.
+      - Collision must be disabled.
+      - It may be represented visually, but it must not contribute mass or collision.
+
+    Bob:
+      - Shape: sphere.
+      - Diameter: 0.1 m.
+      - Radius: 0.5 m.
+      - Mass: 1.0 kg.
+      - The bob center must be located exactly 0.2485 m from the hinge along the rod.
+
+  Initial conditions:
+    - The pendulum starts horizontal.
+    - The bob starts in the +x direction from the hinge.
+    - Initial angle is +90 degrees from vertical.
+    - Initial angular velocity is 0 rad/s.
+
+  MuJoCo XML requirements:
+    - Produce only the final MuJoCo XML content.
+    - The XML must be valid MuJoCo MJCF.
+    - Include compiler/option settings as needed for SI units and gravity.
+    - Include <option gravity="0 -9.81 0">
+    - Enable energy computation using the MuJoCo option flag for energy.
+    - Use a single body attached to the world at the hinge location, with exactly one hinge joint whose axis is "0 0 1".
+    - Set the hinge initial position so the bob is horizontal in the +x direction from the hinge.
+    - Set the initial generalized velocity to zero.
+    - Ensure no additional joints are created.
+    - Ensure no damping, frictionloss, armature, or other dissipative loss terms are applied to the hinge.
+    - Ensure the rod has zero mass and no collision contribution.
+
+  Acceptance criteria:
+    - Exactly one hinge joint exists.
+    - The joint axis is exactly the z-axis: [0, 0, 1].
+    - The joint location is [0, 1, 0] m.
+    - The rod length is 0.2485 m.
+    - The rod mass is 0 kg.
+    - The bob mass is 1.0 kg.
+    - The bob diameter is 0.1 m.
+    - Gravity is [0, -9.81, 0] m/s^2.
+    - The pendulum starts horizontal with the bob in the +x direction from the hinge.
+    - The initial angle is +90 degrees from vertical.
+    - The initial angular velocity is 0 rad/s.
+    - Energy computation is enabled.
+    - The output is a valid MuJoCo XML model.

@@ -1,0 +1,125 @@
+model: Gemma-4-26B
+agent: OpenCode
+prompt_name: simple_ideal_pendulum_mujoco_xml
+version: 1.0
+objective: >-
+  Generate a valid MuJoCo XML model of a simple ideal pendulum using SI units.
+
+instructions:
+  role: >-
+    You are an OpenCode agent generating a MuJoCo XML model. Return only the final
+    MuJoCo XML content, with no commentary, markdown fences, explanations, or extra files.
+  task: >-
+    Create a simple ideal pendulum consisting of a massless rod, a weighted spherical
+    bob, and a single lossless hinge joint.
+  coordinate_system:
+    x_positive: right
+    y_positive: upward
+    z_positive: out_of_page
+  physics:
+    gravity_m_per_s2: [0, -9.81, 0]
+    units: SI
+    energy_computation: enabled
+  pendulum:
+    type: ideal
+    joint:
+      count: 1
+      type: hinge
+      location_m: [0, 1, 0]
+      axis: [0, 0, 1]
+      damping: 0
+      frictionloss: 0
+      armature: 0
+      limited: false
+    rod:
+      length_m: 0.2485
+      mass_kg: 0
+      collision: disabled
+      visual_representation: allowed
+      note: >-
+        If a visual rod is included, ensure it has zero mass and no collision geometry.
+        The dynamic inertia must come only from the spherical bob.
+    bob:
+      shape: sphere
+      diameter_m: 0.1
+      radius_m: 0.5
+      mass_kg: 1.0
+      location_initial: >-
+        The bob center must start 0.2485 m in the +x direction from the hinge.
+  initial_conditions:
+    description: >-
+      Pendulum starts horizontal with the bob located in the +x direction from the hinge.
+    angle_from_vertical_deg: 90
+    angle_sign: positive
+    angular_velocity_rad_per_s: 0
+    qpos: >-
+      Set the hinge coordinate so the pendulum is horizontal to the +x direction at time zero.
+    qvel: 0
+
+mujoco_requirements:
+  compiler:
+    angle_unit: degree
+    coordinate_convention: local
+  option:
+    gravity: [0, -9.81, 0]
+    energy: enable
+  worldbody:
+    hinge_location_m: [0, 1, 0]
+  validity:
+    - XML must parse as a valid MuJoCo model.
+    - Use exactly one hinge joint.
+    - The hinge joint axis must be exactly [0, 0, 1].
+    - The model must have no damping, friction, or other losses at the joint.
+    - The rod must be 0.2485 m long and massless.
+    - Rod collision must be disabled.
+    - The bob must be a sphere with diameter 0.1 m and mass 1.0 kg.
+    - Gravity must be exactly [0, -9.81, 0] m/s^2.
+    - Initial angle must be +90 degrees from vertical.
+    - Initial angular velocity must be 0 rad/s.
+    - Energy computation must be enabled.
+
+recommended_implementation:
+  structure: >-
+    Use a world body located at the hinge and a child body representing the pendulum.
+    Place the hinge joint at the hinge body with axis [0, 0, 1]. Place the bob center
+    at [0.2485, 0, 0] in the pendulum body's local frame for the initial horizontal
+    configuration. Use qpos/qvel keyframe data to set the initial state explicitly.
+  suggested_xml_elements:
+    - mujoco
+    - compiler
+    - option energy="enable" gravity="0 -9.81 0"
+    - default
+    - worldbody
+    - body pos="0 1 0"
+    - joint type="hinge" axis="0 0 1" damping="0" frictionloss="0"
+    - geom for optional massless, non-colliding rod visualization
+    - geom type="sphere" size="0.5" mass="1"
+    - keyframe with qpos="0" and qvel="0" if the body is modeled already horizontal
+  caution: >-
+    Do not create a second joint. Do not assign mass or collision to the rod. Do not
+    put gravity in the -z direction. Do not omit energy computation.
+
+acceptance_criteria:
+  exactly_one_hinge_joint: true
+  joint_axis: [0, 0, 1]
+  joint_location_m: [0, 1, 0]
+  no_damping: true
+  no_friction: true
+  no_losses: true
+  rod_length_m: 0.2485
+  rod_mass_kg: 0
+  rod_collision_disabled: true
+  bob_shape: sphere
+  bob_diameter_m: 0.1
+  bob_mass_kg: 1.0
+  gravity_m_per_s2: [0, -9.81, 0]
+  initial_angle_from_vertical_deg: 90
+  initial_angular_velocity_rad_per_s: 0
+  energy_computation_enabled: true
+
+output_contract:
+  format: MuJoCo XML
+  return_only_xml: true
+  no_markdown: true
+  no_explanation: true
+  no_yaml_in_output: true
