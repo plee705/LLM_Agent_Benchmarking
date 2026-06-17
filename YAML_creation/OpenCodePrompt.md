@@ -1,1 +1,1 @@
-Read the YAML file in the current directory and complete the specified task.
+Read the YAML file in the current directory. Create files and execute necessary tasks as described in the prompt.

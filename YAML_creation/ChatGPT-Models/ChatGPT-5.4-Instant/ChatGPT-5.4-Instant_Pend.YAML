@@ -1,4 +1,3 @@
-filename: ChatGPT-5.4-Instant_PendulumPrompt.YAML
 model: gemma-4-26b
 task: generate_mujoco_model
 description: |
@@ -18,7 +17,7 @@ requirements:
       collision: disabled
     bob:
       shape: sphere
-      diameter: 0.1
+      diameter: 1.0
       mass: 1.0
 
   joint:
