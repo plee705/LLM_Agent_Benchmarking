@@ -1,0 +1,7 @@
+{
+  "agent": {
+    "build": {
+      "temperature": 0.7
+    }
+  }
+}
