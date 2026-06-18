@@ -1,0 +1,39 @@
+scope,temperature,metric,value,unit,formula,description
+test_wide,ALL,total_model_run_time_sec,4145.34,sec,sum(elapsed_sec),Total model run time across all tests.
+test_wide,ALL,total_overall_tokens,6914825.0,tokens,sum(total_tokens),Total overall token use across all tests.
+test_wide,ALL,total_output_tokens,151666.0,tokens,sum(output_tokens),Total output token use across all tests.
+test_wide,ALL,time_per_token_sec,0.0005994858872061115,sec/token,sum(elapsed_sec) / sum(total_tokens),Test-wide average time per token.
+test_wide,ALL,tokens_per_second,1668.0959824767087,tokens/sec,sum(total_tokens) / sum(elapsed_sec),Test-wide token throughput.
+test_wide,ALL,timeout_rate,0.35,ratio,sum(timed_out) / count(tests),Timeout rate across all tests.
+temperature_category,0.1,average_category_run_time_sec,83.25,sec,mean(elapsed_sec) within temperature,Average runtime per test in this temperature category.
+temperature_category,0.1,average_total_tokens,145852.6,tokens,mean(total_tokens) within temperature,Average total tokens per test in this temperature category.
+temperature_category,0.1,average_output_tokens,3099.7,tokens,mean(output_tokens) within temperature,Average output tokens per test in this temperature category.
+temperature_category,0.1,total_token_use,1458526.0,tokens,sum(total_tokens) within temperature,Total token use in this temperature category.
+temperature_category,0.1,average_tokens_per_sec,1725.775375375543,tokens/sec,mean(total_tokens / elapsed_sec) within temperature,Average throughput in this temperature category.
+temperature_category,0.1,timeout_rate,0.0,ratio,sum(timed_out) / count(category tests),Timeout rate in this temperature category.
+temperature_category,0.1,category_tests,10.0,count,count(run_id) within temperature,Number of tests in this temperature category.
+temperature_category,0.1,category_timeouts,0.0,count,sum(timed_out) within temperature,Number of timed out tests in this temperature category.
+temperature_category,0.4,average_category_run_time_sec,103.80499999999999,sec,mean(elapsed_sec) within temperature,Average runtime per test in this temperature category.
+temperature_category,0.4,average_total_tokens,174541.6,tokens,mean(total_tokens) within temperature,Average total tokens per test in this temperature category.
+temperature_category,0.4,average_output_tokens,3866.5,tokens,mean(output_tokens) within temperature,Average output tokens per test in this temperature category.
+temperature_category,0.4,total_token_use,1745416.0,tokens,sum(total_tokens) within temperature,Total token use in this temperature category.
+temperature_category,0.4,average_tokens_per_sec,1678.1598507435385,tokens/sec,mean(total_tokens / elapsed_sec) within temperature,Average throughput in this temperature category.
+temperature_category,0.4,timeout_rate,0.4,ratio,sum(timed_out) / count(category tests),Timeout rate in this temperature category.
+temperature_category,0.4,category_tests,10.0,count,count(run_id) within temperature,Number of tests in this temperature category.
+temperature_category,0.4,category_timeouts,4.0,count,sum(timed_out) within temperature,Number of timed out tests in this temperature category.
+temperature_category,0.7,average_category_run_time_sec,118.56300000000002,sec,mean(elapsed_sec) within temperature,Average runtime per test in this temperature category.
+temperature_category,0.7,average_total_tokens,184246.2,tokens,mean(total_tokens) within temperature,Average total tokens per test in this temperature category.
+temperature_category,0.7,average_output_tokens,4182.4,tokens,mean(output_tokens) within temperature,Average output tokens per test in this temperature category.
+temperature_category,0.7,total_token_use,1842462.0,tokens,sum(total_tokens) within temperature,Total token use in this temperature category.
+temperature_category,0.7,average_tokens_per_sec,1608.3513531199087,tokens/sec,mean(total_tokens / elapsed_sec) within temperature,Average throughput in this temperature category.
+temperature_category,0.7,timeout_rate,0.6,ratio,sum(timed_out) / count(category tests),Timeout rate in this temperature category.
+temperature_category,0.7,category_tests,10.0,count,count(run_id) within temperature,Number of tests in this temperature category.
+temperature_category,0.7,category_timeouts,6.0,count,sum(timed_out) within temperature,Number of timed out tests in this temperature category.
+temperature_category,1.0,average_category_run_time_sec,108.91600000000001,sec,mean(elapsed_sec) within temperature,Average runtime per test in this temperature category.
+temperature_category,1.0,average_total_tokens,186842.1,tokens,mean(total_tokens) within temperature,Average total tokens per test in this temperature category.
+temperature_category,1.0,average_output_tokens,4018.0,tokens,mean(output_tokens) within temperature,Average output tokens per test in this temperature category.
+temperature_category,1.0,total_token_use,1868421.0,tokens,sum(total_tokens) within temperature,Total token use in this temperature category.
+temperature_category,1.0,average_tokens_per_sec,1751.0716663487947,tokens/sec,mean(total_tokens / elapsed_sec) within temperature,Average throughput in this temperature category.
+temperature_category,1.0,timeout_rate,0.4,ratio,sum(timed_out) / count(category tests),Timeout rate in this temperature category.
+temperature_category,1.0,category_tests,10.0,count,count(run_id) within temperature,Number of tests in this temperature category.
+temperature_category,1.0,category_timeouts,4.0,count,sum(timed_out) within temperature,Number of timed out tests in this temperature category.
