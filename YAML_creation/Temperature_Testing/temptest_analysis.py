@@ -165,8 +165,12 @@ def plot_parameter_dual_bar(
 	y_label: str,
 	output_path: Path,
 	include_overall_lines: bool = False,
+	value_scale: float = 1.0,
 ) -> None:
 	"""Plot include-timeouts vs exclude-timeouts bar chart by temperature."""
+	if value_scale <= 0:
+		raise ValueError("value_scale must be greater than 0")
+
 	include_series = _mean_by_temperature(df, column, exclude_timeouts=False)
 	exclude_series = _mean_by_temperature(df, column, exclude_timeouts=True)
 
@@ -177,22 +181,22 @@ def plot_parameter_dual_bar(
 	fig, ax = plt.subplots(figsize=(9, 5))
 	ax.bar(
 		x - bar_width / 2,
-		include_series.values,
+		include_series.values / value_scale,
 		bar_width,
 		label="Include Timeouts",
 		color=PRIMARY_PLOT_COLOR_1,
 	)
 	ax.bar(
 		x + bar_width / 2,
-		exclude_series.values,
+		exclude_series.values / value_scale,
 		bar_width,
 		label="Exclude Timeouts",
 		color=PRIMARY_PLOT_COLOR_2,
 	)
 
 	if include_overall_lines:
-		overall_with = df[column].mean()
-		overall_without = df.loc[~df["timed_out"], column].mean()
+		overall_with = df[column].mean() / value_scale
+		overall_without = df.loc[~df["timed_out"], column].mean() / value_scale
 		ax.axhline(
 			overall_with,
 			color=ACCESSORY_LINE_COLOR,
@@ -326,15 +330,17 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 		df=df,
 		column="total_tokens",
 		title="Average Total Tokens vs Temperature (Include/Exclude Timeouts)",
-		y_label="Average Total Tokens",
+		y_label="Average Total Tokens (thousands)",
 		output_path=output_paths[1],
+		value_scale=1000.0,
 	)
 	plot_parameter_dual_bar(
 		df=df,
 		column="output_tokens",
 		title="Average Output Tokens vs Temperature (Include/Exclude Timeouts)",
-		y_label="Average Output Tokens",
+		y_label="Average Output Tokens (thousands)",
 		output_path=output_paths[2],
+		value_scale=1000.0,
 	)
 	plot_parameter_dual_bar(
 		df=df,
