@@ -107,6 +107,25 @@ def calculate_temperature_category_metrics(df: pd.DataFrame) -> pd.DataFrame:
 	return grouped
 
 
+def calculate_temperature_time_deviation(df: pd.DataFrame) -> pd.DataFrame:
+	"""Calculate std deviation, min, max, and mean elapsed time per temperature category."""
+	return (
+		df.groupby("temp", as_index=False)
+		.agg(
+			mean_elapsed_sec=("elapsed_sec", "mean"),
+			std_elapsed_sec=("elapsed_sec", "std"),
+			min_elapsed_sec=("elapsed_sec", "min"),
+			max_elapsed_sec=("elapsed_sec", "max"),
+		)
+		.sort_values("temp")
+	)
+
+
+def print_temperature_time_deviation(deviation: pd.DataFrame) -> None:
+	print("\n=== Computational Time Deviation by Temperature ===")
+	print(deviation.to_string(index=False))
+
+
 def print_test_wide_metrics(metrics: pd.Series) -> None:
 	print("\n=== Test-Wide Metrics ===")
 	print(f"Total model run time (sec): {metrics['total_model_run_time_sec']:.2f}")
@@ -305,6 +324,80 @@ def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> N
 	plt.close(fig)
 
 
+def plot_compute_time_boxplot(df: pd.DataFrame, output_path: Path) -> None:
+	"""Box and whisker plot of computational time by temperature."""
+	temps = sorted(df["temp"].dropna().unique())
+	data_by_temp = [
+		df.loc[df["temp"] == t, "elapsed_sec"].dropna().values for t in temps
+	]
+	temp_labels = [str(t) for t in temps]
+
+	fig, ax = plt.subplots(figsize=(9, 5))
+	bp = ax.boxplot(
+		data_by_temp,
+		labels=temp_labels,
+		patch_artist=True,
+		medianprops=dict(color=PRIMARY_PLOT_COLOR_2, linewidth=2),
+		whiskerprops=dict(color=PRIMARY_TEXT_COLOR),
+		capprops=dict(color=PRIMARY_TEXT_COLOR),
+		flierprops=dict(markeredgecolor=PRIMARY_TEXT_COLOR),
+	)
+	for patch in bp["boxes"]:
+		patch.set_facecolor(PRIMARY_PLOT_COLOR_1)
+		patch.set_alpha(0.7)
+
+	ax.set_xlabel("Temperature")
+	ax.set_ylabel("Computational Time (sec)")
+	ax.set_title("Computational Time Distribution by Temperature")
+	_style_axis(ax)
+	fig.tight_layout()
+	fig.savefig(output_path, dpi=150)
+	plt.close(fig)
+
+
+def plot_compute_time_min_avg_max(df: pd.DataFrame, output_path: Path) -> None:
+	"""Line plot of min, average, and max computational time vs temperature with timeout threshold."""
+	timeout_sec = (
+		float(df["timeout_sec"].dropna().iloc[0])
+		if "timeout_sec" in df.columns and not df["timeout_sec"].dropna().empty
+		else 150.0
+	)
+
+	stats = calculate_temperature_time_deviation(df)
+	temps = stats["temp"].astype(str)
+
+	fig, ax = plt.subplots(figsize=(9, 5))
+	ax.plot(
+		temps, stats["mean_elapsed_sec"],
+		color=PRIMARY_PLOT_COLOR_1, linestyle="-", linewidth=2, marker="o", label="Average",
+	)
+	ax.plot(
+		temps, stats["min_elapsed_sec"],
+		color=PRIMARY_PLOT_COLOR_1, linestyle=":", linewidth=2, marker="o", label="Minimum",
+	)
+	ax.plot(
+		temps, stats["max_elapsed_sec"],
+		color=PRIMARY_PLOT_COLOR_1, linestyle="-.", linewidth=2, marker="o", label="Maximum",
+	)
+	ax.axhline(
+		timeout_sec,
+		color=ACCESSORY_LINE_COLOR,
+		linestyle="--",
+		linewidth=1.8,
+		label=f"Timeout Threshold ({timeout_sec:.0f} sec)",
+	)
+
+	ax.set_xlabel("Temperature")
+	ax.set_ylabel("Computational Time (sec)")
+	ax.set_title("Computational Time vs Temperature (Min / Avg / Max)")
+	_style_axis(ax)
+	_place_legend_below_axis(ax, ncol=2)
+
+	fig.subplots_adjust(bottom=0.28, right=0.86)
+	fig.savefig(output_path, dpi=150)
+	plt.close(fig)
+
+
 def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 	"""Create all requested temperature analysis plots and return output paths."""
 	output_dir.mkdir(parents=True, exist_ok=True)
@@ -316,6 +409,8 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 		output_dir / "avg_tokens_per_sec_vs_temp_dual_include_exclude_timeouts.png",
 		output_dir / "timeout_rate_vs_temp_single_bar.png",
 		output_dir / "fastest_vs_slowest_solve_time_vs_temp.png",
+		output_dir / "compute_time_boxplot_vs_temp.png",
+		output_dir / "compute_time_min_avg_max_vs_temp.png",
 	]
 
 	plot_parameter_dual_bar(
@@ -352,6 +447,8 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 
 	plot_timeout_rate_single_bar(df, output_paths[4])
 	plot_fastest_vs_slowest_solve_time(df, output_paths[5])
+	plot_compute_time_boxplot(df, output_paths[6])
+	plot_compute_time_min_avg_max(df, output_paths[7])
 
 	return output_paths
 
@@ -522,9 +619,11 @@ def main() -> None:
 
 	test_wide_metrics = calculate_test_wide_metrics(df)
 	category_metrics = calculate_temperature_category_metrics(df)
+	time_deviation = calculate_temperature_time_deviation(df)
 
 	print_test_wide_metrics(test_wide_metrics)
 	print_temperature_category_metrics(category_metrics)
+	print_temperature_time_deviation(time_deviation)
 	plot_paths = plot_temperature_metrics(df, PLOTS_DIR)
 	csv_output_path, txt_output_path = save_metrics_and_metadata(
 		test_wide_metrics, category_metrics, OUTPUT_DIR
