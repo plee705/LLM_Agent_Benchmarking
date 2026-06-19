@@ -241,7 +241,6 @@ def plot_parameter_dual_bar(
 	base_title: str,
 	y_label: str,
 	output_path: Path,
-	include_overall_lines: bool = False,
 	value_scale: float = 1.0,
 ) -> None:
 	"""Plot include-timeouts vs exclude-timeouts bar chart by temperature."""
@@ -251,9 +250,12 @@ def plot_parameter_dual_bar(
 	include_series = _mean_by_temperature(df, column, exclude_timeouts=False)
 	exclude_series = _mean_by_temperature(df, column, exclude_timeouts=True)
 
+	avg_with = df[column].mean() / value_scale
+	avg_without = df.loc[~df["timed_out"], column].mean() / value_scale
+
 	temps = include_series.index.values
 	temp_labels = [str(t) for t in temps]
-	x = np.arange(len(temps))
+	x = np.arange(len(temp_labels))
 	bar_width = 0.38
 
 	fig, ax = plt.subplots(figsize=(9, 5))
@@ -271,24 +273,20 @@ def plot_parameter_dual_bar(
 		label="Exclude Timeouts",
 		color=PRIMARY_PLOT_COLOR_2,
 	)
-
-	if include_overall_lines:
-		overall_with = df[column].mean() / value_scale
-		overall_without = df.loc[~df["timed_out"], column].mean() / value_scale
-		ax.axhline(
-			overall_with,
-			color=ACCESSORY_LINE_COLOR,
-			linestyle="--",
-			linewidth=1.6,
-			label="Overall Avg (with timeouts)",
-		)
-		ax.axhline(
-			overall_without,
-			color=ACCESSORY_LINE_COLOR,
-			linestyle=":",
-			linewidth=1.8,
-			label="Overall Avg (without timeouts)",
-		)
+	ax.axhline(
+		avg_with,
+		color=ACCESSORY_LINE_COLOR,
+		linestyle="--",
+		linewidth=1.6,
+		label="Overall Avg (with timeouts)",
+	)
+	ax.axhline(
+		avg_without,
+		color=ACCESSORY_LINE_COLOR,
+		linestyle=":",
+		linewidth=1.8,
+		label="Overall Avg (without timeouts)",
+	)
 
 	ax.set_xticks(x)
 	ax.set_xticklabels(temp_labels)
@@ -309,18 +307,24 @@ def plot_timeout_rate_single_bar(df: pd.DataFrame, output_path: Path) -> None:
 	temps = timeout_rate.index.values
 	temp_labels = [str(t) for t in temps]
 
+	avg_rate = df["timed_out"].mean() * 100
+
 	fig, ax = plt.subplots(figsize=(8, 5))
-	ax.bar(
-		temp_labels,
-		timeout_rate.values * 100,
-		color=PRIMARY_PLOT_COLOR_1,
+	ax.bar(temp_labels, timeout_rate.values * 100, color=PRIMARY_PLOT_COLOR_1)
+	ax.axhline(
+		avg_rate,
+		color=ACCESSORY_LINE_COLOR,
+		linestyle="--",
+		linewidth=1.6,
+		label="Overall Avg",
 	)
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Timeout Rate (%)")
 	ax.set_title(_title_with_common_sample_size("Timeout Rate by Temperature", df))
 	_style_axis(ax)
+	_place_legend_below_axis(ax, ncol=1)
 
-	fig.tight_layout(rect=(0, 0, 1, 0.96))
+	fig.subplots_adjust(bottom=0.20, right=0.86)
 	fig.savefig(output_path, dpi=150)
 	plt.close(fig)
 
@@ -340,6 +344,8 @@ def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> N
 		.sort_values("temp")
 	)
 	temp_labels = [str(t) for t in agg["temp"].values]
+
+	avg_fastest = non_timeout_df["elapsed_sec"].mean()
 
 	timeout_limit = (
 		float(df["timeout_sec"].dropna().iloc[0])
@@ -366,9 +372,16 @@ def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> N
 		label="Fastest Solve Time",
 	)
 	ax.axhline(
-		timeout_limit,
+		avg_fastest,
 		color=ACCESSORY_LINE_COLOR,
 		linestyle="--",
+		linewidth=1.6,
+		label="Overall Avg Solve Time",
+	)
+	ax.axhline(
+		timeout_limit,
+		color=ACCESSORY_LINE_COLOR,
+		linestyle=":",
 		linewidth=1.8,
 		label=f"Timeout Threshold ({timeout_limit:.0f} sec)",
 	)
@@ -534,7 +547,6 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 		base_title="Avg. Run Time vs. Temperature",
 		y_label="Average Run Time (sec)",
 		output_path=output_paths[0],
-		include_overall_lines=True,
 	)
 	plot_parameter_dual_bar(
 		df=df,
