@@ -1,0 +1,14 @@
+<mujoco model="pendulum">
+  <option gravity="0 -9.81 0" integrator="Euler" />
+
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 3 0" dir="0 -1 0"/>
+    <body name="pendulum_base" pos="0 1 0">
+      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" friction="0"/>
+      <geom name="rod" type="cylinder" size="0.001 0.12425" fromto="0 0 0 0.2485 0 0" mass="0" contype="0" conaffinity="0"/>
+      <body name="bob" pos="0.2485 0 0">
+        <geom name="bob_geom" type="sphere" size="0.05" mass="1.0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

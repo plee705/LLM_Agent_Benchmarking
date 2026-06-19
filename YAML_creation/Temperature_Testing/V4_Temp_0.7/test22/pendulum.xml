@@ -1,0 +1,30 @@
+<mujoco model="pendulum">
+  <compiler angle="radian" coordinate="local" inertiafromgeom="true"/>
+  <option gravity="0 -9.81 0" timestep="0.002"/>
+
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 -3" dir="0 0 1"/>
+    <body name="pendulum" pos="0 1 0">
+      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" friction="0"/>
+      <!-- Massless rod -->
+      <geom name="rod" type="capsule" fromto="0 0 0 0.2485 0 0" size="0.001" mass="0" contype="0" conaffinity="0"/>
+      <body name="bob" pos="0.2485 0 0">
+        <!-- Bob: sphere, diameter 0.1m (radius 0.05m), mass 1.0kg -->
+        <geom name="bob_geom" type="sphere" size="0.05" mass="1.0"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <keyframe>
+    <!-- Initial angle: +90 degrees from vertical. 
+         If the bob is at [0.2485, 0, 0], it is already horizontal.
+         In MuJoCo, the joint angle 0 is the initial orientation.
+         If we want it to start horizontal, we can set the initial position to be horizontal and qpos=0.
+         However, if we want the angle to be 90 degrees, we should define it such that 0 is vertical.
+         But the requirement "Bob positioned along +x from hinge" is specific.
+         If the bob is at [0.2485, 0, 0] and the hinge is at [0, 1, 0], then at qpos=0, the bob is at [0.2485, 1, 0], which is horizontal.
+         So I will set qpos=0 and assume that the angle is 90 degrees from vertical.
+    -->
+    <key qpos="0" name="horizontal"/>
+  </keyframe>
+</mujoco>

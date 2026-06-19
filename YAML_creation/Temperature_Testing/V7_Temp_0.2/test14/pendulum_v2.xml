@@ -1,0 +1,36 @@
+<mujoco model="pendulum">
+  <option gravity="0 -9.81 0" />
+
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+    
+    <body name="hinge_body" pos="0 1 0">
+      <joint name="hinge_joint" type="hinge" axis="0 0 1" damping="0" friction="0"/>
+      
+      <!-- Massless rod -->
+      <geom name="rod" type="capsule" fromto="0 0 0 0.2485 0 0" size="0.001" mass="0" contype="0" conaffinity="0"/>
+      
+      <body name="bob_body" pos="0.2485 0 0">
+        <!-- Spherical bob: diameter 0.1m -> radius 0.05m -->
+        <geom name="bob" type="sphere" size="0.05" mass="1.0"/>
+      </body>
+    </body>
+  </worldbody>
+
+  <!-- Initial conditions: Pendulum starts horizontal (+90 deg from vertical) -->
+  <!-- Since +y is upward and gravity is [0, -9.81, 0], vertical is [0, 1, 0] -->
+  <!-- Horizontal is [1, 0, 0] or [-1, 0, 0]. The prompt says bob positioned along +x from hinge. -->
+  <!-- To set initial state in MuJoCo XML, we use <key> or <qpos> if using a model with state. 
+       However, for a simple XML, we can set the initial pos/quat or use <key>. 
+       Actually, MuJoCo XML doesn't support <qpos> directly in the <body/joint> tag for initial state in all versions, 
+       but we can use <key> or just provide the XML.
+       The prompt asks to "Generate a valid MuJoCo XML model".
+       Wait, the prompt says "Pendulum starts horizontal" and "Bob positioned along +x from hinge". 
+       If the joint is at (0,1,0) and the bob is at (0.2485, 0, 0) relative to the joint, 
+       the bob's global position is (0.2485, 1, 0). 
+       If the joint is at (0,1,0) and the axis is (0,0,1), then the rotation is in the XY plane.
+       Gravity is (0, -9.81, 0).
+       If the bob is at (0.2485, 1, 0), it is indeed horizontal.
+  -->
+
+</mujoco>

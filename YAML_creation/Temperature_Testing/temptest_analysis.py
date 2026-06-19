@@ -46,6 +46,11 @@ def normalize_temperature_test_data(df: pd.DataFrame) -> pd.DataFrame:
 		np.nan,
 	)
 
+	normalized["attempt"] = normalized["run_id"].astype(str).str.extract(
+		r"test(\d+)$", expand=False
+	)
+	normalized["attempt"] = pd.to_numeric(normalized["attempt"], errors="coerce")
+
 	return normalized
 
 
@@ -177,10 +182,63 @@ def _place_legend_below_axis(ax: plt.Axes, ncol: int = 2) -> None:
 			text.set_color(PRIMARY_TEXT_COLOR)
 
 
+def _completed_samples(df: pd.DataFrame) -> pd.DataFrame:
+	"""Return samples that reached a completed run state for fair per-temp counts."""
+	completed = df.copy()
+	if "total_tokens" in completed.columns:
+		completed = completed.loc[completed["total_tokens"].fillna(0) > 0]
+	if "xml_exists" in completed.columns:
+		xml_exists = completed["xml_exists"].astype(str).str.strip().str.upper().eq("TRUE")
+		completed = completed.loc[xml_exists]
+	return completed
+
+
+def _sample_counts_by_temperature(df: pd.DataFrame) -> pd.Series:
+	"""Count completed samples per temperature."""
+	completed = _completed_samples(df)
+	if completed.empty:
+		completed = df
+	return completed.groupby("temp")["run_id"].count().sort_index()
+
+
+def _common_sample_size(df: pd.DataFrame) -> int:
+	"""Use common per-temperature sample size for plot annotations."""
+	counts = _sample_counts_by_temperature(df)
+	if counts.empty:
+		return 0
+	return int(counts.min())
+
+
+def _annotate_common_sample_size(ax: plt.Axes, df: pd.DataFrame) -> None:
+	"""Place shared n annotation at the top of each plot."""
+	n = _common_sample_size(df)
+	ax.text(
+		0.5,
+		1.04,
+		f"n={n} per temperature",
+		transform=ax.transAxes,
+		ha="center",
+		va="bottom",
+		color=PRIMARY_TEXT_COLOR,
+		fontsize=10,
+	)
+
+
+def _title_with_common_sample_size(base_title: str, df: pd.DataFrame) -> str:
+	"""Build a consistent title suffix with common sample size."""
+	n = _common_sample_size(df)
+	return f"{base_title} (n={n})"
+
+
+def _timestamped_plot_path(output_dir: Path, stem: str, run_tag: str) -> Path:
+	"""Return a unique plot path so new runs do not overwrite prior outputs."""
+	return output_dir / f"{stem}_{run_tag}.png"
+
+
 def plot_parameter_dual_bar(
 	df: pd.DataFrame,
 	column: str,
-	title: str,
+	base_title: str,
 	y_label: str,
 	output_path: Path,
 	include_overall_lines: bool = False,
@@ -193,7 +251,8 @@ def plot_parameter_dual_bar(
 	include_series = _mean_by_temperature(df, column, exclude_timeouts=False)
 	exclude_series = _mean_by_temperature(df, column, exclude_timeouts=True)
 
-	temps = include_series.index.astype(str)
+	temps = include_series.index.values
+	temp_labels = [str(t) for t in temps]
 	x = np.arange(len(temps))
 	bar_width = 0.38
 
@@ -232,10 +291,10 @@ def plot_parameter_dual_bar(
 		)
 
 	ax.set_xticks(x)
-	ax.set_xticklabels(temps)
+	ax.set_xticklabels(temp_labels)
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel(y_label)
-	ax.set_title(title)
+	ax.set_title(_title_with_common_sample_size(base_title, df))
 	_style_axis(ax)
 	_place_legend_below_axis(ax, ncol=2)
 
@@ -247,19 +306,21 @@ def plot_parameter_dual_bar(
 def plot_timeout_rate_single_bar(df: pd.DataFrame, output_path: Path) -> None:
 	"""Plot timeout rate by temperature as a single-bar chart."""
 	timeout_rate = df.groupby("temp")["timed_out"].mean().sort_index()
+	temps = timeout_rate.index.values
+	temp_labels = [str(t) for t in temps]
 
 	fig, ax = plt.subplots(figsize=(8, 5))
 	ax.bar(
-		timeout_rate.index.astype(str),
+		temp_labels,
 		timeout_rate.values * 100,
 		color=PRIMARY_PLOT_COLOR_1,
 	)
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Timeout Rate (%)")
-	ax.set_title("Timeout Rate by Temperature")
+	ax.set_title(_title_with_common_sample_size("Timeout Rate by Temperature", df))
 	_style_axis(ax)
 
-	fig.tight_layout()
+	fig.tight_layout(rect=(0, 0, 1, 0.96))
 	fig.savefig(output_path, dpi=150)
 	plt.close(fig)
 
@@ -278,6 +339,7 @@ def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> N
 		)
 		.sort_values("temp")
 	)
+	temp_labels = [str(t) for t in agg["temp"].values]
 
 	timeout_limit = (
 		float(df["timeout_sec"].dropna().iloc[0])
@@ -312,10 +374,14 @@ def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> N
 	)
 
 	ax.set_xticks(x)
-	ax.set_xticklabels(agg["temp"].astype(str))
+	ax.set_xticklabels(temp_labels)
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Solve Time (sec)")
-	ax.set_title("Fastest Solve Time vs Slowest (Ghost) by Temperature")
+	ax.set_title(
+		_title_with_common_sample_size(
+			"Fastest Solve Time vs Slowest (Ghost) by Temperature", df
+		)
+	)
 	_style_axis(ax)
 	_place_legend_below_axis(ax, ncol=2)
 
@@ -335,7 +401,7 @@ def plot_compute_time_boxplot(df: pd.DataFrame, output_path: Path) -> None:
 	fig, ax = plt.subplots(figsize=(9, 5))
 	bp = ax.boxplot(
 		data_by_temp,
-		labels=temp_labels,
+		tick_labels=temp_labels,
 		patch_artist=True,
 		medianprops=dict(color=PRIMARY_PLOT_COLOR_2, linewidth=2),
 		whiskerprops=dict(color=PRIMARY_TEXT_COLOR),
@@ -348,9 +414,13 @@ def plot_compute_time_boxplot(df: pd.DataFrame, output_path: Path) -> None:
 
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Computational Time (sec)")
-	ax.set_title("Computational Time Distribution by Temperature")
+	ax.set_title(
+		_title_with_common_sample_size(
+			"Computational Time Distribution by Temperature", df
+		)
+	)
 	_style_axis(ax)
-	fig.tight_layout()
+	fig.tight_layout(rect=(0, 0, 1, 0.96))
 	fig.savefig(output_path, dpi=150)
 	plt.close(fig)
 
@@ -364,19 +434,23 @@ def plot_compute_time_min_avg_max(df: pd.DataFrame, output_path: Path) -> None:
 	)
 
 	stats = calculate_temperature_time_deviation(df)
-	temps = stats["temp"].astype(str)
+	temp_values = stats["temp"].values
+	temp_labels = [str(t) for t in temp_values]
 
 	fig, ax = plt.subplots(figsize=(9, 5))
 	ax.plot(
-		temps, stats["mean_elapsed_sec"],
+		temp_labels,
+		stats["mean_elapsed_sec"],
 		color=PRIMARY_PLOT_COLOR_1, linestyle="-", linewidth=2, marker="o", label="Average",
 	)
 	ax.plot(
-		temps, stats["min_elapsed_sec"],
+		temp_labels,
+		stats["min_elapsed_sec"],
 		color=PRIMARY_PLOT_COLOR_1, linestyle=":", linewidth=2, marker="o", label="Minimum",
 	)
 	ax.plot(
-		temps, stats["max_elapsed_sec"],
+		temp_labels,
+		stats["max_elapsed_sec"],
 		color=PRIMARY_PLOT_COLOR_1, linestyle="-.", linewidth=2, marker="o", label="Maximum",
 	)
 	ax.axhline(
@@ -389,7 +463,11 @@ def plot_compute_time_min_avg_max(df: pd.DataFrame, output_path: Path) -> None:
 
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Computational Time (sec)")
-	ax.set_title("Computational Time vs Temperature (Min / Avg / Max)")
+	ax.set_title(
+		_title_with_common_sample_size(
+			"Computational Time vs Temperature (Min / Avg / Max)", df
+		)
+	)
 	_style_axis(ax)
 	_place_legend_below_axis(ax, ncol=2)
 
@@ -398,25 +476,62 @@ def plot_compute_time_min_avg_max(df: pd.DataFrame, output_path: Path) -> None:
 	plt.close(fig)
 
 
+def plot_compute_time_vs_attempt(df: pd.DataFrame, output_path: Path) -> None:
+	"""Plot computational time vs attempt number with one line per temperature."""
+	plot_df = df.dropna(subset=["attempt", "elapsed_sec", "temp"]).copy()
+	if plot_df.empty:
+		return
+
+	temps = sorted(plot_df["temp"].unique())
+	color_map = plt.get_cmap("tab10")
+
+	fig, ax = plt.subplots(figsize=(10, 6))
+	for idx, temp in enumerate(temps):
+		temp_df = plot_df.loc[plot_df["temp"] == temp].sort_values("attempt")
+		ax.plot(
+			temp_df["attempt"],
+			temp_df["elapsed_sec"],
+			marker="o",
+			linewidth=1.8,
+			color=color_map(idx % 10),
+			label=f"Temp {temp}",
+		)
+
+	ax.set_xlabel("Attempt")
+	ax.set_ylabel("Computational Time (sec)")
+	ax.set_title(
+		_title_with_common_sample_size("Computational Time vs Attempt by Temperature", df)
+	)
+	ax.set_xticks(sorted(plot_df["attempt"].astype(int).unique()))
+	_style_axis(ax)
+	_place_legend_below_axis(ax, ncol=2)
+
+	fig.subplots_adjust(bottom=0.30, right=0.86)
+	fig.savefig(output_path, dpi=150)
+	plt.close(fig)
+
+
 def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 	"""Create all requested temperature analysis plots and return output paths."""
 	output_dir.mkdir(parents=True, exist_ok=True)
+	run_tag = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 
 	output_paths = [
-		output_dir / "avg_runtime_vs_temp_dual_include_exclude_timeouts.png",
-		output_dir / "avg_total_tokens_vs_temp_dual_include_exclude_timeouts.png",
-		output_dir / "avg_output_tokens_vs_temp_dual_include_exclude_timeouts.png",
-		output_dir / "avg_tokens_per_sec_vs_temp_dual_include_exclude_timeouts.png",
-		output_dir / "timeout_rate_vs_temp_single_bar.png",
-		output_dir / "fastest_vs_slowest_solve_time_vs_temp.png",
-		output_dir / "compute_time_boxplot_vs_temp.png",
-		output_dir / "compute_time_min_avg_max_vs_temp.png",
+		_timestamped_plot_path(output_dir, "avg_runtime_vs_temp_dual_include_exclude_timeouts", run_tag),
+		_timestamped_plot_path(output_dir, "avg_total_tokens_vs_temp_dual_include_exclude_timeouts", run_tag),
+		_timestamped_plot_path(output_dir, "avg_output_tokens_vs_temp_dual_include_exclude_timeouts", run_tag),
+		_timestamped_plot_path(output_dir, "avg_tokens_per_sec_vs_temp_dual_include_exclude_timeouts", run_tag),
+		_timestamped_plot_path(output_dir, "timeout_rate_vs_temp_single_bar", run_tag),
+		_timestamped_plot_path(output_dir, "fastest_vs_slowest_solve_time_vs_temp", run_tag),
+		_timestamped_plot_path(output_dir, "compute_time_boxplot_vs_temp", run_tag),
+		_timestamped_plot_path(output_dir, "compute_time_min_avg_max_vs_temp", run_tag),
+		_timestamped_plot_path(output_dir, "compute_time_vs_attempt_all_temps", run_tag),
 	]
 
 	plot_parameter_dual_bar(
 		df=df,
 		column="elapsed_sec",
-		title="Average Run Time vs Temperature (Include/Exclude Timeouts)",
+		base_title="Avg. Run Time vs. Temperature",
 		y_label="Average Run Time (sec)",
 		output_path=output_paths[0],
 		include_overall_lines=True,
@@ -424,7 +539,7 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 	plot_parameter_dual_bar(
 		df=df,
 		column="total_tokens",
-		title="Average Total Tokens vs Temperature (Include/Exclude Timeouts)",
+		base_title="Avg. Total Tokens vs. Temperature",
 		y_label="Average Total Tokens (thousands)",
 		output_path=output_paths[1],
 		value_scale=1000.0,
@@ -432,7 +547,7 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 	plot_parameter_dual_bar(
 		df=df,
 		column="output_tokens",
-		title="Average Output Tokens vs Temperature (Include/Exclude Timeouts)",
+		base_title="Avg. Output Tokens vs. Temperature",
 		y_label="Average Output Tokens (thousands)",
 		output_path=output_paths[2],
 		value_scale=1000.0,
@@ -440,7 +555,7 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 	plot_parameter_dual_bar(
 		df=df,
 		column="tokens_per_second",
-		title="Average Tokens/Sec vs Temperature (Include/Exclude Timeouts)",
+		base_title="Avg. Tokens/Sec vs. Temperature",
 		y_label="Average Tokens/Sec",
 		output_path=output_paths[3],
 	)
@@ -449,6 +564,7 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 	plot_fastest_vs_slowest_solve_time(df, output_paths[5])
 	plot_compute_time_boxplot(df, output_paths[6])
 	plot_compute_time_min_avg_max(df, output_paths[7])
+	plot_compute_time_vs_attempt(df, output_paths[8])
 
 	return output_paths
 

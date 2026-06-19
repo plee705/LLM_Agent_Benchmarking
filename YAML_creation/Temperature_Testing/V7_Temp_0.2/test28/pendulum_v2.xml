@@ -1,0 +1,38 @@
+<mujoco model="pendulum">
+  <option gravity="0 -9.81 0" timestep="0.001"/>
+
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 -3" dir="0 0 1"/>
+
+    <body name="pendulum_base" pos="0 1 0">
+      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" friction="0"/>
+      <body name="rod" pos="0 0 0">
+        <!-- The rod is modeled as a geom attached to the hinge body, but since it's massless and has no collision, we can just use the bob's position relative to the hinge -->
+        <!-- However, the prompt asks for a rod of length 0.2485m. In MuJoCo, a massless rod is often just the distance between the joint and the bob. -->
+        <body name="bob" pos="0.2485 0 0">
+          <geom type="sphere" size="0.05" mass="1.0"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <keyframe>
+    <!-- Initial angle: +90 degrees from vertical. 
+         Vertical is typically qpos=0. 
+         If hinge is at (0,1,0) and bob is at (0.2485, 1, 0), qpos should be PI/2.
+         Wait, the coordinate system is +y = upward. 
+         If the pendulum hangs down, the bob is at (0, 1-0.2485, 0). 
+         If it starts horizontal (+x), the bob is at (0.2485, 1, 0).
+         In MuJoCo, qpos for a hinge joint is the angle.
+         If 0 is hanging down (along -y), then +90 degrees (horizontal) would be +PI/2.
+         Let's check the axis: [0, 0, 1]. 
+         If qpos=0, bob is at (0, 1-0.2485, 0)? No, the body 'bob' is at pos="0.2485 0 0" relative to 'pendulum_base'.
+         If qpos=0, the 'bob' body is at (0.2485, 1, 0).
+         Wait, if gravity is (0, -9.81, 0), then qpos=0 (horizontal) is an unstable equilibrium.
+         The prompt says: "Pendulum starts horizontal", "Initial angle: +90 degrees from vertical".
+         If vertical is qpos=0, then horizontal is qpos=PI/2.
+         Let's define the rod as a geom for completeness, even if massless.
+      -->
+      <key qpos="1.570796" name="horizontal"/>
+    </keyframe>
+</mujoco>
