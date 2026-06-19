@@ -13,7 +13,7 @@ if [ ! -f "$RESULTS_CSV" ]; then
     echo "run_id,model,temp,steps,timeout_sec,elapsed_sec,timed_out,total_tokens,input_tokens,output_tokens,cache_read_tokens,cache_write_tokens,xml_exists,xml_file,xml_compile_pass" > "$RESULTS_CSV"
 fi
 
-for CONFIG_DIR in V*/; do
+for CONFIG_DIR in V6_Temp_0.0/ V7_Temp_0.2/ V8_Temp_0.3/ V9_Temp_0.5/; do
     CONFIG_DIR="${CONFIG_DIR%/}"
 
     TEMP=$(echo "$CONFIG_DIR" | sed -n 's/.*Temp_\([0-9.]*\).*/\1/p')
