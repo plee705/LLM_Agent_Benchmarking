@@ -1,0 +1,27 @@
+<mujoco>
+  <option gravity="0 -9.81 0" />
+
+  <worldbody>
+    <light diffuse=".5 .5 .5" pos="0 0 -3" dir="0 0 1"/>
+    
+    <body name="pendulum" pos="0 1 0">
+      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" friction="0"/>
+      <!-- Rod: Length 0.2485 m, Mass 0, Collision disabled -->
+      <geom name="rod" type="capsule" fromto="0 0 0 0 0.2485 0" size="0.001" mass="0" contype="0" conaffinity="0"/>
+      <!-- Bob: Shape sphere, Diameter 0.1 m (radius 0.05), Mass 1.0 kg -->
+      <geom name="bob_geom" type="sphere" pos="0 0.2485 0" size="0.05" mass="1.0"/>
+    </body>
+  </worldbody>
+
+  <keyframe>
+    <!-- 
+      Initial angle: +90 degrees from vertical (around Z axis, from Y to X).
+      qpos for hinge joint: 1.5708 (pi/2)
+      When qpos is 1.5708, the body rotates 90 deg around Z.
+      Since it starts at Y, it will move to X.
+      Position of bob in world: (0,1,0) + rotate((0,0.2485,0), 1.5708) = (0,1,0) + (0.2485,0,0) = (0.2485, 1, 0).
+      This matches "Bob positioned along +x from hinge" (relative to hinge at 0,1,0).
+    -->
+    <key qpos="1.5708" />
+  </keyframe>
+</mujoco>

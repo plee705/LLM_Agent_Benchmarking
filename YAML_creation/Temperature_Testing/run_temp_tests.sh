@@ -25,7 +25,7 @@ for CONFIG_DIR in V2_Temp_0.1/ V3_Temp_0.4/ V4_Temp_0.7/ V5_Temp_1.0/ V6_Temp_0.
         TEMP="default"
     fi
 
-    for TEST_NUM in $(seq -w 21 30); do
+    for TEST_NUM in $(seq -w 31 35); do
         TEST_DIR="$CONFIG_DIR/test$TEST_NUM"
 
         if [ ! -d "$TEST_DIR" ]; then

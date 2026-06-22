@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import datetime
+import argparse
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -209,30 +210,82 @@ def _common_sample_size(df: pd.DataFrame) -> int:
 	return int(counts.min())
 
 
-def _annotate_common_sample_size(ax: plt.Axes, df: pd.DataFrame) -> None:
-	"""Place shared n annotation at the top of each plot."""
-	n = _common_sample_size(df)
-	ax.text(
-		0.5,
-		1.04,
-		f"n={n} per temperature",
-		transform=ax.transAxes,
-		ha="center",
-		va="bottom",
-		color=PRIMARY_TEXT_COLOR,
-		fontsize=10,
-	)
-
-
-def _title_with_common_sample_size(base_title: str, df: pd.DataFrame) -> str:
-	"""Build a consistent title suffix with common sample size."""
-	n = _common_sample_size(df)
+def _title_with_sample_size(base_title: str, sample_size: int) -> str:
+	"""Build a consistent title suffix with selected sample size."""
+	n = max(0, int(sample_size))
 	return f"{base_title} (n={n})"
 
 
-def _timestamped_plot_path(output_dir: Path, stem: str, run_tag: str) -> Path:
-	"""Return a unique plot path so new runs do not overwrite prior outputs."""
-	return output_dir / f"{stem}_{run_tag}.png"
+def _sorted_by_attempt(df: pd.DataFrame) -> pd.DataFrame:
+	"""Sort rows by extracted attempt value when available, otherwise by run_id."""
+	sorted_df = df.copy()
+	if "attempt" in sorted_df.columns:
+		sorted_df["_attempt_order"] = sorted_df["attempt"].fillna(np.inf)
+		sorted_df = sorted_df.sort_values(["_attempt_order", "run_id"], kind="stable")
+		sorted_df = sorted_df.drop(columns=["_attempt_order"])
+		return sorted_df
+	return sorted_df.sort_values("run_id", kind="stable")
+
+
+def _temperature_gray_color(temp: float) -> tuple[float, float, float]:
+	"""Map temperature in [0,1] to grayscale (light gray at 0, black at 1)."""
+	temp_norm = float(np.clip(temp, 0.0, 1.0))
+	gray = 0.88 * (1.0 - temp_norm)
+	return (gray, gray, gray)
+
+
+def _temperature_marker(temp: float) -> str:
+	"""Map temperature value to a distinct marker style."""
+	marker_map = {
+		0.0: "o",      # circle
+		0.1: "s",      # square
+		0.2: "^",      # triangle up
+		0.3: "v",      # triangle down
+		0.4: "D",      # diamond
+		0.5: "*",      # star
+		0.7: "p",      # pentagon
+		1.0: "H",      # hexagon
+	}
+	return marker_map.get(float(temp), "o")  # default to circle if not found
+
+
+def resolve_sample_size(df: pd.DataFrame, requested_sample_size: int | None) -> tuple[int, int]:
+	"""Resolve sample size to a valid common per-temperature size bounded by data."""
+	available_common = _common_sample_size(df)
+	if available_common <= 0:
+		return 0, 0
+
+	if requested_sample_size is None:
+		return available_common, available_common
+
+	if requested_sample_size <= 0:
+		raise ValueError("sample size must be a positive integer")
+
+	return min(requested_sample_size, available_common), available_common
+
+
+def apply_sample_size_by_temperature(df: pd.DataFrame, sample_size: int) -> pd.DataFrame:
+	"""Take the first n samples per temperature based on attempt/run order."""
+	if sample_size <= 0:
+		return df.iloc[0:0].copy()
+
+	frames: list[pd.DataFrame] = []
+	for temp_value in sorted(df["temp"].dropna().unique()):
+		temp_df = df.loc[df["temp"] == temp_value]
+		temp_df = _sorted_by_attempt(temp_df)
+		frames.append(temp_df.head(sample_size))
+
+	if not frames:
+		return df.iloc[0:0].copy()
+
+	return pd.concat(frames, ignore_index=True)
+
+
+def _timestamped_plot_path(
+	output_dir: Path, stem: str, run_tag: str, sample_size: int
+) -> Path:
+	"""Return unique plot path with sample size so outputs are self-describing."""
+	return output_dir / f"{stem}_n{int(sample_size)}_{run_tag}.png"
 
 
 def plot_parameter_dual_bar(
@@ -241,6 +294,7 @@ def plot_parameter_dual_bar(
 	base_title: str,
 	y_label: str,
 	output_path: Path,
+	sample_size: int,
 	value_scale: float = 1.0,
 ) -> None:
 	"""Plot include-timeouts vs exclude-timeouts bar chart by temperature."""
@@ -292,7 +346,7 @@ def plot_parameter_dual_bar(
 	ax.set_xticklabels(temp_labels)
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel(y_label)
-	ax.set_title(_title_with_common_sample_size(base_title, df))
+	ax.set_title(_title_with_sample_size(base_title, sample_size))
 	_style_axis(ax)
 	_place_legend_below_axis(ax, ncol=2)
 
@@ -301,7 +355,7 @@ def plot_parameter_dual_bar(
 	plt.close(fig)
 
 
-def plot_timeout_rate_single_bar(df: pd.DataFrame, output_path: Path) -> None:
+def plot_timeout_rate_single_bar(df: pd.DataFrame, output_path: Path, sample_size: int) -> None:
 	"""Plot timeout rate by temperature as a single-bar chart."""
 	timeout_rate = df.groupby("temp")["timed_out"].mean().sort_index()
 	temps = timeout_rate.index.values
@@ -320,7 +374,7 @@ def plot_timeout_rate_single_bar(df: pd.DataFrame, output_path: Path) -> None:
 	)
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Timeout Rate (%)")
-	ax.set_title(_title_with_common_sample_size("Timeout Rate by Temperature", df))
+	ax.set_title(_title_with_sample_size("Timeout Rate by Temperature", sample_size))
 	_style_axis(ax)
 	_place_legend_below_axis(ax, ncol=1)
 
@@ -329,8 +383,40 @@ def plot_timeout_rate_single_bar(df: pd.DataFrame, output_path: Path) -> None:
 	plt.close(fig)
 
 
-def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> None:
-	"""Plot fastest solve times with a ghost bar for slowest solve times."""
+def plot_computational_time_std_by_temperature(
+	df: pd.DataFrame, output_path: Path, sample_size: int
+) -> None:
+	"""Plot standard deviation of computational time by temperature."""
+	std_by_temp = df.groupby("temp")["elapsed_sec"].std().sort_index()
+	temps = std_by_temp.index.values
+	temp_labels = [str(t) for t in temps]
+
+	avg_std = df["elapsed_sec"].std()
+
+	fig, ax = plt.subplots(figsize=(8, 5))
+	ax.bar(temp_labels, std_by_temp.values, color=PRIMARY_PLOT_COLOR_1)
+	ax.axhline(
+		avg_std,
+		color=ACCESSORY_LINE_COLOR,
+		linestyle="--",
+		linewidth=1.6,
+		label="Overall Avg Std Dev",
+	)
+	ax.set_xlabel("Temperature")
+	ax.set_ylabel("Standard Deviation of Computational Time (sec)")
+	ax.set_title(_title_with_sample_size("Computational Time Std Dev by Temperature", sample_size))
+	_style_axis(ax)
+	_place_legend_below_axis(ax, ncol=1)
+
+	fig.subplots_adjust(bottom=0.20, right=0.86)
+	fig.savefig(output_path, dpi=150)
+	plt.close(fig)
+
+
+def plot_converged_solution_min_max_time(
+	df: pd.DataFrame, output_path: Path, sample_size: int
+) -> None:
+	"""Plot min and max computational time for converged solutions only."""
 	non_timeout_df = df.loc[~df["timed_out"]].copy()
 	if non_timeout_df.empty:
 		return
@@ -338,61 +424,56 @@ def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> N
 	agg = (
 		non_timeout_df.groupby("temp", as_index=False)
 		.agg(
-			fastest_solve_time_sec=("elapsed_sec", "min"),
-			slowest_solve_time_sec=("elapsed_sec", "max"),
+			min_converged_time_sec=("elapsed_sec", "min"),
+			max_converged_time_sec=("elapsed_sec", "max"),
 		)
 		.sort_values("temp")
 	)
 	temp_labels = [str(t) for t in agg["temp"].values]
-
-	avg_fastest = non_timeout_df["elapsed_sec"].mean()
-
-	timeout_limit = (
-		float(df["timeout_sec"].dropna().iloc[0])
-		if "timeout_sec" in df.columns and not df["timeout_sec"].dropna().empty
-		else 150.0
-	)
+	overall_min_avg = agg["min_converged_time_sec"].mean()
+	overall_max_avg = agg["max_converged_time_sec"].mean()
 
 	x = np.arange(len(agg))
-	fig, ax = plt.subplots(figsize=(9, 5))
+	bar_width = 0.38
 
+	fig, ax = plt.subplots(figsize=(9, 5))
 	ax.bar(
-		x,
-		agg["slowest_solve_time_sec"],
-		width=0.62,
-		color=SECONDARY_COLOR,
-		alpha=0.45,
-		label="Slowest Solve Time (ghost)",
+		x - bar_width / 2,
+		agg["min_converged_time_sec"],
+		bar_width,
+		label="Minimum Converged Time",
+		color=PRIMARY_PLOT_COLOR_1,
 	)
 	ax.bar(
-		x,
-		agg["fastest_solve_time_sec"],
-		width=0.38,
-		color=PRIMARY_PLOT_COLOR_1,
-		label="Fastest Solve Time",
+		x + bar_width / 2,
+		agg["max_converged_time_sec"],
+		bar_width,
+		label="Maximum Converged Time",
+		color=PRIMARY_PLOT_COLOR_2,
 	)
 	ax.axhline(
-		avg_fastest,
+		overall_min_avg,
 		color=ACCESSORY_LINE_COLOR,
 		linestyle="--",
-		linewidth=1.6,
-		label="Overall Avg Solve Time",
+		linewidth=1.8,
+		label="Overall Avg Min Converged Time",
 	)
 	ax.axhline(
-		timeout_limit,
+		overall_max_avg,
 		color=ACCESSORY_LINE_COLOR,
 		linestyle=":",
 		linewidth=1.8,
-		label=f"Timeout Threshold ({timeout_limit:.0f} sec)",
+		label="Overall Avg Max Converged Time",
 	)
 
 	ax.set_xticks(x)
 	ax.set_xticklabels(temp_labels)
 	ax.set_xlabel("Temperature")
-	ax.set_ylabel("Solve Time (sec)")
+	ax.set_ylabel("Computational Time (sec)")
 	ax.set_title(
-		_title_with_common_sample_size(
-			"Fastest Solve Time vs Slowest (Ghost) by Temperature", df
+		_title_with_sample_size(
+			"Converged Solution Computational Time (Min / Max) by Temperature",
+			sample_size,
 		)
 	)
 	_style_axis(ax)
@@ -403,7 +484,7 @@ def plot_fastest_vs_slowest_solve_time(df: pd.DataFrame, output_path: Path) -> N
 	plt.close(fig)
 
 
-def plot_compute_time_boxplot(df: pd.DataFrame, output_path: Path) -> None:
+def plot_compute_time_boxplot(df: pd.DataFrame, output_path: Path, sample_size: int) -> None:
 	"""Box and whisker plot of computational time by temperature."""
 	temps = sorted(df["temp"].dropna().unique())
 	data_by_temp = [
@@ -428,8 +509,8 @@ def plot_compute_time_boxplot(df: pd.DataFrame, output_path: Path) -> None:
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Computational Time (sec)")
 	ax.set_title(
-		_title_with_common_sample_size(
-			"Computational Time Distribution by Temperature", df
+		_title_with_sample_size(
+			"Computational Time Distribution by Temperature", sample_size
 		)
 	)
 	_style_axis(ax)
@@ -438,7 +519,9 @@ def plot_compute_time_boxplot(df: pd.DataFrame, output_path: Path) -> None:
 	plt.close(fig)
 
 
-def plot_compute_time_min_avg_max(df: pd.DataFrame, output_path: Path) -> None:
+def plot_compute_time_min_avg_max(
+	df: pd.DataFrame, output_path: Path, sample_size: int
+) -> None:
 	"""Line plot of min, average, and max computational time vs temperature with timeout threshold."""
 	timeout_sec = (
 		float(df["timeout_sec"].dropna().iloc[0])
@@ -477,8 +560,8 @@ def plot_compute_time_min_avg_max(df: pd.DataFrame, output_path: Path) -> None:
 	ax.set_xlabel("Temperature")
 	ax.set_ylabel("Computational Time (sec)")
 	ax.set_title(
-		_title_with_common_sample_size(
-			"Computational Time vs Temperature (Min / Avg / Max)", df
+		_title_with_sample_size(
+			"Computational Time vs Temperature (Min / Avg / Max)", sample_size
 		)
 	)
 	_style_axis(ax)
@@ -489,56 +572,430 @@ def plot_compute_time_min_avg_max(df: pd.DataFrame, output_path: Path) -> None:
 	plt.close(fig)
 
 
-def plot_compute_time_vs_attempt(df: pd.DataFrame, output_path: Path) -> None:
-	"""Plot computational time vs attempt number with one line per temperature."""
-	plot_df = df.dropna(subset=["attempt", "elapsed_sec", "temp"]).copy()
+def _timeout_cumulative_deviation_every_five(df: pd.DataFrame) -> pd.DataFrame:
+	"""Compute cumulative timeout-rate deviation by temperature at n=5,10,15,..."""
+	plot_df = df.dropna(subset=["temp"]).copy()
 	if plot_df.empty:
+		return pd.DataFrame(columns=["series", "temp", "sample_size", "deviation_pp"])
+
+	ordered_per_temp: dict[float, pd.DataFrame] = {}
+	for temp in sorted(plot_df["temp"].unique()):
+		ordered_per_temp[temp] = _sorted_by_attempt(plot_df.loc[plot_df["temp"] == temp])
+
+	if not ordered_per_temp:
+		return pd.DataFrame(columns=["series", "temp", "sample_size", "deviation_pp"])
+
+	common_n = min(len(temp_df) for temp_df in ordered_per_temp.values())
+	step_sizes = list(range(5, common_n + 1, 5))
+	if not step_sizes:
+		return pd.DataFrame(columns=["series", "temp", "sample_size", "deviation_pp"])
+
+	records = []
+	for temp, temp_df in ordered_per_temp.items():
+		if temp_df.empty:
+			continue
+
+		baseline_rate = float(temp_df["timed_out"].mean())
+		for n in step_sizes:
+			cum_rate = float(temp_df.head(n)["timed_out"].mean())
+			records.append(
+				{
+					"series": f"Temp {temp}",
+					"temp": temp,
+					"sample_size": n,
+					"deviation_pp": (cum_rate - baseline_rate) * 100.0,
+				}
+			)
+
+	overall_final_rate = float(plot_df["timed_out"].mean())
+	for n in step_sizes:
+		overall_frames = [temp_df.head(n) for temp_df in ordered_per_temp.values()]
+		overall_df = pd.concat(overall_frames, ignore_index=True)
+		overall_cum_rate = float(overall_df["timed_out"].mean())
+		records.append(
+			{
+				"series": "Overall",
+				"temp": np.nan,
+				"sample_size": n,
+				"deviation_pp": (overall_cum_rate - overall_final_rate) * 100.0,
+			}
+		)
+
+	return pd.DataFrame.from_records(records)
+
+
+def plot_cumulative_timeout_deviation_every_five(
+	df: pd.DataFrame, output_path: Path, sample_size: int
+) -> None:
+	"""Plot cumulative timeout-rate deviation at n=5,10,15,... for each temperature."""
+	deviation_df = _timeout_cumulative_deviation_every_five(df)
+	if deviation_df.empty:
 		return
 
-	temps = sorted(plot_df["temp"].unique())
-	color_map = plt.get_cmap("tab10")
+	temps = sorted(deviation_df.loc[deviation_df["series"] != "Overall", "temp"].unique())
 
 	fig, ax = plt.subplots(figsize=(10, 6))
-	for idx, temp in enumerate(temps):
-		temp_df = plot_df.loc[plot_df["temp"] == temp].sort_values("attempt")
+	for temp in temps:
+		temp_dev = deviation_df.loc[deviation_df["series"] == f"Temp {temp}"].sort_values("sample_size")
 		ax.plot(
-			temp_df["attempt"],
-			temp_df["elapsed_sec"],
-			marker="o",
+			temp_dev["sample_size"],
+			temp_dev["deviation_pp"],
+			marker=_temperature_marker(float(temp)),
 			linewidth=1.8,
-			color=color_map(idx % 10),
+			color=_temperature_gray_color(float(temp)),
 			label=f"Temp {temp}",
 		)
 
-	ax.set_xlabel("Attempt")
-	ax.set_ylabel("Computational Time (sec)")
-	ax.set_title(
-		_title_with_common_sample_size("Computational Time vs Attempt by Temperature", df)
-	)
-	ax.set_xticks(sorted(plot_df["attempt"].astype(int).unique()))
-	_style_axis(ax)
-	_place_legend_below_axis(ax, ncol=2)
+	overall_dev = deviation_df.loc[deviation_df["series"] == "Overall"].sort_values("sample_size")
+	if not overall_dev.empty:
+		ax.plot(
+			overall_dev["sample_size"],
+			overall_dev["deviation_pp"],
+			marker="s",
+			linewidth=2.2,
+			color=PRIMARY_PLOT_COLOR_2,
+			linestyle="--",
+			label="Overall",
+		)
 
-	fig.subplots_adjust(bottom=0.30, right=0.86)
+	step_sizes = sorted(deviation_df["sample_size"].astype(int).unique())
+	ax.set_xticks(step_sizes)
+	ax.set_xlabel("Cumulative Sample Size")
+	ax.set_ylabel("Timeout Rate Deviation (pp)")
+	ax.set_title(
+		_title_with_sample_size(
+			"Cumulative Timeout Rate Deviation by Temperature",
+			sample_size,
+		)
+	)
+	_style_axis(ax)
+	_place_legend_below_axis(ax, ncol=5)
+
+	fig.subplots_adjust(bottom=0.34, right=0.86)
 	fig.savefig(output_path, dpi=150)
 	plt.close(fig)
 
 
-def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
+def _timeout_rate_vs_sample_size_every_five(df: pd.DataFrame) -> pd.DataFrame:
+	"""Compute timeout rate vs sample size for each temperature and overall set."""
+	plot_df = df.dropna(subset=["temp"]).copy()
+	if plot_df.empty:
+		return pd.DataFrame(columns=["series", "sample_size", "timeout_rate_pct"])
+
+	ordered_per_temp: dict[float, pd.DataFrame] = {}
+	for temp in sorted(plot_df["temp"].unique()):
+		ordered_per_temp[temp] = _sorted_by_attempt(plot_df.loc[plot_df["temp"] == temp])
+
+	if not ordered_per_temp:
+		return pd.DataFrame(columns=["series", "sample_size", "timeout_rate_pct"])
+
+	common_n = min(len(temp_df) for temp_df in ordered_per_temp.values())
+	step_sizes = list(range(5, common_n + 1, 5))
+	if not step_sizes:
+		return pd.DataFrame(columns=["series", "sample_size", "timeout_rate_pct"])
+
+	records = []
+	for temp, temp_df in ordered_per_temp.items():
+		for n in step_sizes:
+			rate = float(temp_df.head(n)["timed_out"].mean()) * 100.0
+			records.append(
+				{
+					"series": f"Temp {temp}",
+					"sample_size": n,
+					"timeout_rate_pct": rate,
+				}
+			)
+
+	for n in step_sizes:
+		overall_frames = [temp_df.head(n) for temp_df in ordered_per_temp.values()]
+		overall_df = pd.concat(overall_frames, ignore_index=True)
+		overall_rate = float(overall_df["timed_out"].mean()) * 100.0
+		records.append(
+			{
+				"series": "Overall",
+				"sample_size": n,
+				"timeout_rate_pct": overall_rate,
+			}
+		)
+
+	return pd.DataFrame.from_records(records)
+
+
+def plot_timeout_rate_vs_sample_size_every_five(
+	df: pd.DataFrame, output_path: Path, sample_size: int
+) -> None:
+	"""Plot timeout rate vs sample size (every 5) for each temperature and overall."""
+	rate_df = _timeout_rate_vs_sample_size_every_five(df)
+	if rate_df.empty:
+		return
+
+	series_names = sorted([s for s in rate_df["series"].unique() if s != "Overall"])
+
+	fig, ax = plt.subplots(figsize=(10, 6))
+	for series_name in series_names:
+		series_df = rate_df.loc[rate_df["series"] == series_name].sort_values("sample_size")
+		temp_value = float(series_name.replace("Temp ", ""))
+		ax.plot(
+			series_df["sample_size"],
+			series_df["timeout_rate_pct"],
+			marker=_temperature_marker(temp_value),
+			linewidth=1.8,
+			color=_temperature_gray_color(temp_value),
+			label=series_name,
+		)
+
+	overall_df = rate_df.loc[rate_df["series"] == "Overall"].sort_values("sample_size")
+	if not overall_df.empty:
+		ax.plot(
+			overall_df["sample_size"],
+			overall_df["timeout_rate_pct"],
+			marker="s",
+			linewidth=2.2,
+			color=PRIMARY_PLOT_COLOR_2,
+			linestyle="--",
+			label="Overall",
+		)
+
+	step_sizes = sorted(rate_df["sample_size"].astype(int).unique())
+	ax.set_xticks(step_sizes)
+
+	ax.set_xlabel("Sample Size (per temperature)")
+	ax.set_ylabel("Timeout Rate (%)")
+	ax.set_title(
+		_title_with_sample_size(
+			"Timeout Rate vs Sample Size by Temperature", sample_size
+		)
+	)
+	_style_axis(ax)
+	_place_legend_below_axis(ax, ncol=5)
+
+	fig.subplots_adjust(bottom=0.34, right=0.86)
+	fig.savefig(output_path, dpi=150)
+	plt.close(fig)
+
+
+def _cumulative_converged_time_metric_every_five(
+	df: pd.DataFrame, metric: str
+) -> pd.DataFrame:
+	"""Compute cumulative converged-time metric every 5 samples for each temperature and overall.
+	
+	For each temperature and each step size, only converged runs are considered.
+	The metric tracks cumulative min/max/mean of converged runs up to that step.
+	"""
+	if metric not in {"min", "max", "mean"}:
+		raise ValueError("metric must be one of: min, max, mean")
+
+	ordered_per_temp: dict[float, pd.DataFrame] = {}
+	for temp in sorted(df["temp"].dropna().unique()):
+		ordered_per_temp[temp] = _sorted_by_attempt(df.loc[df["temp"] == temp])
+
+	if not ordered_per_temp:
+		return pd.DataFrame(columns=["series", "sample_size", "value"])
+
+	common_n = min(len(temp_df) for temp_df in ordered_per_temp.values())
+	step_sizes = list(range(5, common_n + 1, 5))
+	if not step_sizes:
+		return pd.DataFrame(columns=["series", "sample_size", "value"])
+
+	records = []
+	for temp, temp_df in ordered_per_temp.items():
+		for n in step_sizes:
+			window = temp_df.head(n)
+			converged_times = window.loc[~window["timed_out"], "elapsed_sec"]
+			if converged_times.empty:
+				continue
+			if metric == "min":
+				value = float(converged_times.min())
+			elif metric == "max":
+				value = float(converged_times.max())
+			else:
+				value = float(converged_times.mean())
+			records.append(
+				{
+					"series": f"Temp {temp}",
+					"sample_size": n,
+					"value": value,
+				}
+			)
+
+	for n in step_sizes:
+		per_temp_values = []
+		for temp_df in ordered_per_temp.values():
+			window = temp_df.head(n)
+			converged_times = window.loc[~window["timed_out"], "elapsed_sec"]
+			if converged_times.empty:
+				continue
+			if metric == "min":
+				per_temp_values.append(float(converged_times.min()))
+			elif metric == "max":
+				per_temp_values.append(float(converged_times.max()))
+			else:
+				per_temp_values.append(float(converged_times.mean()))
+		
+		if per_temp_values:
+			overall_value = float(np.mean(per_temp_values))
+			records.append(
+				{
+					"series": "Overall",
+					"sample_size": n,
+					"value": overall_value,
+				}
+			)
+
+	return pd.DataFrame.from_records(records)
+
+
+def plot_cumulative_converged_time_metric_every_five(
+	df: pd.DataFrame,
+	output_path: Path,
+	sample_size: int,
+	metric: str,
+) -> None:
+	"""Plot a cumulative converged-time metric every 5 samples for each temperature and overall."""
+	metric_df = _cumulative_converged_time_metric_every_five(df, metric)
+	if metric_df.empty:
+		return
+
+	metric_titles = {
+		"min": ("Minimum Converged Time", "Minimum Computational Time (sec)", "Overall Minimum Time"),
+		"max": ("Maximum Converged Time", "Maximum Computational Time (sec)", "Overall Maximum Time"),
+		"mean": ("Average Converged Time", "Average Computational Time (sec)", "Overall Average Time"),
+	}
+	base_title, y_label, overall_label = metric_titles[metric]
+
+	series_names = sorted([s for s in metric_df["series"].unique() if s != "Overall"])
+
+	fig, ax = plt.subplots(figsize=(10, 6))
+	for series_name in series_names:
+		series_df = metric_df.loc[metric_df["series"] == series_name].sort_values("sample_size")
+		temp_value = float(series_name.replace("Temp ", ""))
+		ax.plot(
+			series_df["sample_size"],
+			series_df["value"],
+			marker=_temperature_marker(temp_value),
+			linewidth=1.8,
+			color=_temperature_gray_color(temp_value),
+			label=series_name,
+		)
+
+	overall_df = metric_df.loc[metric_df["series"] == "Overall"].sort_values("sample_size")
+	if not overall_df.empty:
+		ax.plot(
+			overall_df["sample_size"],
+			overall_df["value"],
+			marker="s",
+			linewidth=2.2,
+			color=PRIMARY_PLOT_COLOR_2,
+			linestyle="--",
+			label=overall_label,
+		)
+
+	step_sizes = sorted(metric_df["sample_size"].astype(int).unique())
+	ax.set_xticks(step_sizes)
+
+	ax.set_xlabel("Sample Size (per temperature)")
+	ax.set_ylabel(y_label)
+	ax.set_title(_title_with_sample_size(f"{base_title} by Temperature", sample_size))
+	_style_axis(ax)
+	_place_legend_below_axis(ax, ncol=5)
+
+	fig.subplots_adjust(bottom=0.34, right=0.86)
+	fig.savefig(output_path, dpi=150)
+	plt.close(fig)
+
+
+def plot_temperature_metrics(
+	df: pd.DataFrame, output_dir: Path, sample_size: int
+) -> list[Path]:
 	"""Create all requested temperature analysis plots and return output paths."""
 	output_dir.mkdir(parents=True, exist_ok=True)
 	run_tag = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 
 	output_paths = [
-		_timestamped_plot_path(output_dir, "avg_runtime_vs_temp_dual_include_exclude_timeouts", run_tag),
-		_timestamped_plot_path(output_dir, "avg_total_tokens_vs_temp_dual_include_exclude_timeouts", run_tag),
-		_timestamped_plot_path(output_dir, "avg_output_tokens_vs_temp_dual_include_exclude_timeouts", run_tag),
-		_timestamped_plot_path(output_dir, "avg_tokens_per_sec_vs_temp_dual_include_exclude_timeouts", run_tag),
-		_timestamped_plot_path(output_dir, "timeout_rate_vs_temp_single_bar", run_tag),
-		_timestamped_plot_path(output_dir, "fastest_vs_slowest_solve_time_vs_temp", run_tag),
-		_timestamped_plot_path(output_dir, "compute_time_boxplot_vs_temp", run_tag),
-		_timestamped_plot_path(output_dir, "compute_time_min_avg_max_vs_temp", run_tag),
-		_timestamped_plot_path(output_dir, "compute_time_vs_attempt_all_temps", run_tag),
+		_timestamped_plot_path(
+			output_dir,
+			"avg_runtime_vs_temp_dual_include_exclude_timeouts",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"avg_total_tokens_vs_temp_dual_include_exclude_timeouts",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"avg_output_tokens_vs_temp_dual_include_exclude_timeouts",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"avg_tokens_per_sec_vs_temp_dual_include_exclude_timeouts",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"timeout_rate_vs_temp_single_bar",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"computational_time_std_by_temperature",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"converged_solution_min_max_time_vs_temp",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"compute_time_boxplot_vs_temp",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"compute_time_min_avg_max_vs_temp",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"cumulative_timeout_rate_deviation_every_5_samples",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"timeout_rate_vs_sample_size_every_5_samples",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"avg_min_converged_time_vs_sample_size_every_5_samples",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"avg_max_converged_time_vs_sample_size_every_5_samples",
+			run_tag,
+			sample_size,
+		),
+		_timestamped_plot_path(
+			output_dir,
+			"avg_converged_time_vs_sample_size_every_5_samples",
+			run_tag,
+			sample_size,
+		),
 	]
 
 	plot_parameter_dual_bar(
@@ -547,6 +1004,7 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 		base_title="Avg. Run Time vs. Temperature",
 		y_label="Average Run Time (sec)",
 		output_path=output_paths[0],
+		sample_size=sample_size,
 	)
 	plot_parameter_dual_bar(
 		df=df,
@@ -554,6 +1012,7 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 		base_title="Avg. Total Tokens vs. Temperature",
 		y_label="Average Total Tokens (thousands)",
 		output_path=output_paths[1],
+		sample_size=sample_size,
 		value_scale=1000.0,
 	)
 	plot_parameter_dual_bar(
@@ -562,6 +1021,7 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 		base_title="Avg. Output Tokens vs. Temperature",
 		y_label="Average Output Tokens (thousands)",
 		output_path=output_paths[2],
+		sample_size=sample_size,
 		value_scale=1000.0,
 	)
 	plot_parameter_dual_bar(
@@ -570,15 +1030,35 @@ def plot_temperature_metrics(df: pd.DataFrame, output_dir: Path) -> list[Path]:
 		base_title="Avg. Tokens/Sec vs. Temperature",
 		y_label="Average Tokens/Sec",
 		output_path=output_paths[3],
+		sample_size=sample_size,
 	)
 
-	plot_timeout_rate_single_bar(df, output_paths[4])
-	plot_fastest_vs_slowest_solve_time(df, output_paths[5])
-	plot_compute_time_boxplot(df, output_paths[6])
-	plot_compute_time_min_avg_max(df, output_paths[7])
-	plot_compute_time_vs_attempt(df, output_paths[8])
+	plot_timeout_rate_single_bar(df, output_paths[4], sample_size)
+	plot_computational_time_std_by_temperature(df, output_paths[5], sample_size)
+	plot_converged_solution_min_max_time(df, output_paths[6], sample_size)
+	plot_compute_time_boxplot(df, output_paths[7], sample_size)
+	plot_compute_time_min_avg_max(df, output_paths[8], sample_size)
+	plot_cumulative_timeout_deviation_every_five(df, output_paths[9], sample_size)
+	plot_timeout_rate_vs_sample_size_every_five(df, output_paths[10], sample_size)
+	plot_cumulative_converged_time_metric_every_five(df, output_paths[11], sample_size, "min")
+	plot_cumulative_converged_time_metric_every_five(df, output_paths[12], sample_size, "max")
+	plot_cumulative_converged_time_metric_every_five(df, output_paths[13], sample_size, "mean")
 
 	return output_paths
+
+
+def parse_args() -> argparse.Namespace:
+	parser = argparse.ArgumentParser(
+		description="Analyze temperature tests and generate metrics/plots."
+	)
+	parser.add_argument(
+		"-n",
+		"--sample-size",
+		type=int,
+		default=None,
+		help="Samples per temperature to analyze (bounded by available common sample count).",
+	)
+	return parser.parse_args()
 
 
 def build_metric_metadata_table(
@@ -742,8 +1222,26 @@ def save_metrics_and_metadata(
 
 
 def main() -> None:
+	args = parse_args()
+
 	df = load_temperature_test_data(CSV_PATH)
 	df = normalize_temperature_test_data(df)
+
+	resolved_n, available_n = resolve_sample_size(df, args.sample_size)
+	if resolved_n <= 0:
+		raise ValueError("No valid samples found in the input CSV.")
+
+	df = apply_sample_size_by_temperature(df, resolved_n)
+
+	if args.sample_size is None:
+		print(f"Using full common sample size from CSV: n={resolved_n} per temperature")
+	elif args.sample_size > available_n:
+		print(
+			f"Requested n={args.sample_size} exceeds available common sample size {available_n}; "
+			f"using n={resolved_n}"
+		)
+	else:
+		print(f"Using requested sample size: n={resolved_n} per temperature")
 
 	test_wide_metrics = calculate_test_wide_metrics(df)
 	category_metrics = calculate_temperature_category_metrics(df)
@@ -752,7 +1250,7 @@ def main() -> None:
 	print_test_wide_metrics(test_wide_metrics)
 	print_temperature_category_metrics(category_metrics)
 	print_temperature_time_deviation(time_deviation)
-	plot_paths = plot_temperature_metrics(df, PLOTS_DIR)
+	plot_paths = plot_temperature_metrics(df, PLOTS_DIR, sample_size=resolved_n)
 	csv_output_path, txt_output_path = save_metrics_and_metadata(
 		test_wide_metrics, category_metrics, OUTPUT_DIR
 	)
