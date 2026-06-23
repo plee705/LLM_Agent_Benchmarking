@@ -1,0 +1,322 @@
+Pendulum Statistics Summary
+================================================================================
+Source CSV: /home/ginger24/summer26/agentic-mujoco-master/llm_prompt_testing/YAML_creation/Temperature_Testing/statistics_plots/pendulum_analysis_errorfriction_Plots/pendulum_analysis_errorfriction.csv
+Total folders analyzed: 280
+
+Global and Temperature Metrics
+--------------------------------------------------------------------------------
+          scope  folders xml_parse_error_pct mujoco_compile_success_pct extra_xml_files_pct gravity_correct_pct hinge_axis_correct_pct rod_bob_pos_match_pct rod_mass_zero_pct bob_mass_nonzero_pct extra_unexpected_pct file_creation_success_pct compiled_timeout_pct converged_timeout_pct created_timeout_pct compiled_file_pct converged_file_pct created_file_pct
+         global      280               0.36%                      4.32%               9.29%              93.21%                 97.86%                84.64%            86.07%               95.71%               24.64%                    99.29%                2.83%                 0.00%              98.15%             4.32%             61.43%           99.29%
+temperature=0.0       35               0.00%                      2.86%               8.57%              97.14%                100.00%                85.71%            85.71%              100.00%               25.71%                   100.00%                0.00%                 0.00%             100.00%             2.86%             60.00%          100.00%
+temperature=0.1       35               0.00%                      2.86%               8.57%              91.43%                 97.14%                82.86%            82.86%               94.29%               22.86%                   100.00%                8.33%                 0.00%             100.00%             2.86%             65.71%          100.00%
+temperature=0.2       35               2.86%                      5.71%              11.43%              91.43%                 97.14%                71.43%            77.14%               91.43%               17.14%                   100.00%                0.00%                 0.00%             100.00%             5.71%             62.86%          100.00%
+temperature=0.3       35               0.00%                      9.09%              11.43%              85.71%                 91.43%                85.71%            85.71%               91.43%               28.57%                    94.29%                7.69%                 0.00%              86.67%             9.09%             57.14%           94.29%
+temperature=0.4       35               0.00%                      8.57%               2.86%              97.14%                100.00%                82.86%            85.71%               97.14%               31.43%                   100.00%                0.00%                 0.00%             100.00%             8.57%             62.86%          100.00%
+temperature=0.5       35               0.00%                      2.86%              20.00%              88.57%                100.00%                85.71%            88.57%               97.14%               25.71%                   100.00%                0.00%                 0.00%             100.00%             2.86%             60.00%          100.00%
+temperature=0.7       35               0.00%                      0.00%               5.71%              94.29%                 97.14%                94.29%            91.43%               97.14%               34.29%                   100.00%                0.00%                 0.00%             100.00%             0.00%             60.00%          100.00%
+temperature=1.0       35               0.00%                      2.86%               5.71%             100.00%                100.00%                88.57%            91.43%               97.14%               11.43%                   100.00%                7.69%                 0.00%             100.00%             2.86%             62.86%          100.00%
+
+MuJoCo Compile Errors
+--------------------------------------------------------------------------------
+- 89 (33.21%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6
+- 65 (24.25%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8
+- 40 (14.93%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7
+- 31 (11.57%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5
+- 29 (10.82%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9
+- 3 (1.12%): XML Error: Schema violation: unrecognized element Element 'model', line 2
+- 2 (0.75%): XML Error: Schema violation: unrecognized element Element 'flag', line 4
+- 2 (0.75%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 10
+- 2 (0.75%): pendulum.xml not found
+- 2 (0.75%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 13
+- 1 (0.37%): not well-formed (invalid token): line 16, column 18
+- 1 (0.37%): XML Error: Schema violation: unrecognized element Element 'key', line 16
+- 1 (0.37%): XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 11
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 217 (79.20%)
+- pendulum_base: 17 (6.20%)
+- hinge_body: 15 (5.47%)
+- pendulum_body: 9 (3.28%)
+- pendulum_link: 6 (2.19%)
+- hinge_point: 3 (1.09%)
+- pendulum_root: 3 (1.09%)
+- hinge_base: 2 (0.73%)
+- base: 1 (0.36%)
+- pendulum_rod: 1 (0.36%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 263 (95.99%)
+- hinge_joint: 10 (3.65%)
+- pendulum_joint: 1 (0.36%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 182 (75.21%)
+- cylinder: 60 (24.79%)
+
+Per-Temperature Distributions
+--------------------------------------------------------------------------------
+Temperature 0.0
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 10 (29.41%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 9 (26.47%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 6 (17.65%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 5 (14.71%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 3 (8.82%)
+- XML Error: Schema violation: unrecognized element Element 'flag', line 4: 1 (2.94%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 26 (74.29%)
+- pendulum_base: 3 (8.57%)
+- hinge_body: 2 (5.71%)
+- hinge_point: 1 (2.86%)
+- pendulum_body: 1 (2.86%)
+- pendulum_root: 1 (2.86%)
+- base: 1 (2.86%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 33 (94.29%)
+- hinge_joint: 2 (5.71%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 24 (80.00%)
+- cylinder: 6 (20.00%)
+
+Temperature 0.1
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 9 (26.47%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 8 (23.53%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 8 (23.53%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 5 (14.71%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 3 (8.82%)
+- XML Error: Schema violation: unrecognized element Element 'model', line 2: 1 (2.94%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 29 (85.29%)
+- hinge_body: 3 (8.82%)
+- pendulum_link: 1 (2.94%)
+- pendulum_base: 1 (2.94%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 31 (91.18%)
+- hinge_joint: 3 (8.82%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 21 (72.41%)
+- cylinder: 8 (27.59%)
+
+Temperature 0.2
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 11 (33.33%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 10 (30.30%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 5 (15.15%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 4 (12.12%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 10: 1 (3.03%)
+- not well-formed (invalid token): line 16, column 18: 1 (3.03%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 1 (3.03%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 29 (85.29%)
+- pendulum_base: 1 (2.94%)
+- pendulum_link: 1 (2.94%)
+- pendulum_root: 1 (2.94%)
+- hinge_base: 1 (2.94%)
+- pendulum_body: 1 (2.94%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 34 (100.00%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 18 (66.67%)
+- cylinder: 9 (33.33%)
+
+Temperature 0.3
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 16 (50.00%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 7 (21.88%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 4 (12.50%)
+- pendulum.xml not found: 2 (6.25%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 1 (3.12%)
+- XML Error: Schema violation: unrecognized element Element 'model', line 2: 1 (3.12%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 1 (3.12%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 27 (84.38%)
+- hinge_body: 2 (6.25%)
+- pendulum_rod: 1 (3.12%)
+- pendulum_body: 1 (3.12%)
+- pendulum_link: 1 (3.12%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 31 (96.88%)
+- hinge_joint: 1 (3.12%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 23 (76.67%)
+- cylinder: 7 (23.33%)
+
+Temperature 0.4
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 11 (34.38%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 7 (21.88%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 6 (18.75%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 4 (12.50%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 2 (6.25%)
+- XML Error: Schema violation: unrecognized element Element 'flag', line 4: 1 (3.12%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 10: 1 (3.12%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 24 (68.57%)
+- pendulum_base: 3 (8.57%)
+- pendulum_body: 3 (8.57%)
+- hinge_body: 3 (8.57%)
+- hinge_point: 1 (2.86%)
+- pendulum_root: 1 (2.86%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 33 (94.29%)
+- hinge_joint: 1 (2.86%)
+- pendulum_joint: 1 (2.86%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 23 (76.67%)
+- cylinder: 7 (23.33%)
+
+Temperature 0.5
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 13 (38.24%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 9 (26.47%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 4 (11.76%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 4 (11.76%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 13: 2 (5.88%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 2 (5.88%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 26 (74.29%)
+- pendulum_base: 4 (11.43%)
+- hinge_body: 2 (5.71%)
+- pendulum_body: 1 (2.86%)
+- pendulum_link: 1 (2.86%)
+- hinge_point: 1 (2.86%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 34 (97.14%)
+- hinge_joint: 1 (2.86%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 23 (74.19%)
+- cylinder: 8 (25.81%)
+
+Temperature 0.7
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 9 (25.71%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 9 (25.71%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 8 (22.86%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 4 (11.43%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 4 (11.43%)
+- XML Error: Schema violation: unrecognized element Element 'model', line 2: 1 (2.86%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 31 (91.18%)
+- pendulum_link: 2 (5.88%)
+- pendulum_base: 1 (2.94%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 34 (100.00%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 28 (84.85%)
+- cylinder: 5 (15.15%)
+
+Temperature 1.0
+Folders: 35
+Compile Errors
+--------------------------------------------------------------------------------
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 6: 12 (35.29%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 5: 7 (20.59%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 8: 5 (14.71%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 7: 5 (14.71%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 9: 3 (8.82%)
+- XML Error: Schema violation: unrecognized element Element 'key', line 16: 1 (2.94%)
+- XML Error: Schema violation: unrecognized attribute: 'friction' Element 'joint', line 11: 1 (2.94%)
+
+Pendulum Body Names
+--------------------------------------------------------------------------------
+- pendulum: 25 (71.43%)
+- pendulum_base: 4 (11.43%)
+- hinge_body: 3 (8.57%)
+- pendulum_body: 2 (5.71%)
+- hinge_base: 1 (2.86%)
+
+Joint Names
+--------------------------------------------------------------------------------
+- hinge: 33 (94.29%)
+- hinge_joint: 2 (5.71%)
+
+Rod Geom Types
+--------------------------------------------------------------------------------
+- capsule: 22 (68.75%)
+- cylinder: 10 (31.25%)
+
+Timeout Statistics
+--------------------------------------------------------------------------------
+Timed out folders: 108
+Timed out folders that compile: 2.78%
+Timed out folders that converged: 0.00%
+Timed out folders that created XML: 98.15%
+
+ threshold_sec  created_files created_pct  compiled_files compiled_pct  converged_files converged_pct compiled_among_created_pct
+           150            278      99.29%              12        4.32%              172        61.43%                      4.32%
+           140            278      99.29%              12        4.32%              166        59.29%                      4.32%
+           130            278      99.29%              12        4.32%              158        56.43%                      4.32%
+           120            278      99.29%              12        4.32%              149        53.21%                      4.32%
+           110            278      99.29%              12        4.32%              135        48.21%                      4.32%
+           100            278      99.29%              12        4.32%              121        43.21%                      4.32%
+            90            278      99.29%              12        4.32%              111        39.64%                      4.32%
+            80            278      99.29%              12        4.32%              105        37.50%                      4.32%
+            70            278      99.29%              12        4.32%               99        35.36%                      4.32%
+            60            278      99.29%              12        4.32%               92        32.86%                      4.32%
+            50            278      99.29%              12        4.32%               86        30.71%                      4.32%
+            40            278      99.29%              12        4.32%               72        25.71%                      4.32%
+            30            278      99.29%              12        4.32%               37        13.21%                      4.32%
+            20            278      99.29%              12        4.32%                2         0.71%                      4.32%
+            10            278      99.29%              12        4.32%                0         0.00%                      4.32%
+             0            278      99.29%              12        4.32%                0         0.00%                      4.32%
+

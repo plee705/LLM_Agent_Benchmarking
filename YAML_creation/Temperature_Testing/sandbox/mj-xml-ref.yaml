@@ -1,0 +1,31 @@
+Product: MuJoCo
+Title: MuJoCo XML Reference
+For: .xml files
+
+Purpose: Legal MuJoCo XML Terms
+
+worldbody & body:
+
+  body/joint:
+    - name: string
+    - class: string
+    - type: [free, ball, slide, hinge]
+    - group: int
+    - pos: real(3)
+    - axis: real(3)
+    - springdamper: real(2)
+    - stiffness: real(3)
+    - range: real(2)
+    - limited: [false, true, auto]
+    - ref: real(1)
+    - springref: real(1)
+    - armature: real(1)
+    - damping: real(3)
+    - frictionloss: real(1)
+    - user: real(njnt_user)
+    - solreflimit, solimplimit, solreffriction, solimpfriction
+    - actuatorfrcrange: real(2)
+    - actuatorfrclimited: [false, true, auto]
+    - actuatorgravcomp: [false, true]
+    - margin: real(1)
+

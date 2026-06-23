@@ -5,7 +5,7 @@
     <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
 
     <body name="pendulum" pos="0 1 0">
-      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" friction="0"/>
+      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" frictionloss="0"/>
       <!-- Rod: Massless, length 0.2485m -->
       <geom name="rod" type="capsule" fromto="0 0 0 0.2485 0 0" size="0.001" mass="0" contype="0" conaffinity="0"/>
       <!-- Bob: Sphere, diameter 0.1m (radius 0.05m), mass 1.0kg -->

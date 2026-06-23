@@ -5,7 +5,7 @@
     <light diffuse=".5 .5 .5" pos="0 3 0" dir="0 -1 0"/>
     
     <body name="pendulum" pos="0 1 0">
-      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" friction="0"/>
+      <joint name="hinge" type="hinge" axis="0 0 1" damping="0" frictionloss="0"/>
       
       <!-- Massless rod: length 0.2485m, mass 0, collision disabled -->
       <geom name="rod" type="cylinder" size="0.005 0.12425" fromto="0 0 0 0 0.2485 0" mass="0" contype="0" conaffinity="0"/>
