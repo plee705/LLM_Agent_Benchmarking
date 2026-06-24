@@ -434,12 +434,22 @@ def _annotate_pie_with_leaders(ax: plt.Axes, wedges, labels: list[str], values: 
 
 def pie_error_breakdown(df: pd.DataFrame, plots_dir: Path) -> None:
     missing = int(df["file_created"].eq(False).sum())
-    xml_errors = int(df["xml_parse_error"].fillna(False).sum())
+
+    # Treat XML_Parse_Error as a compile error bucket rather than XML parse error.
+    xml_parse_error_markers = (
+        df["xml_parse_error_msg"].fillna("").str.strip().str.casefold().eq("xml_parse_error")
+        | df["mujoco_compile_error"].fillna("").str.strip().str.casefold().eq("xml_parse_error")
+    )
+
+    xml_errors = int((df["xml_parse_error"].fillna(False) & ~xml_parse_error_markers).sum())
     compiled = int(df["mujoco_compiles"].fillna(False).sum())
     compile_failures = int(
         (
             df["file_created"].eq(True)
-            & df["xml_parse_error"].fillna(False).eq(False)
+            & (
+                df["xml_parse_error"].fillna(False).eq(False)
+                | xml_parse_error_markers
+            )
             & df["mujoco_compiles"].fillna(False).eq(False)
         ).sum()
     )
