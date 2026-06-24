@@ -665,7 +665,7 @@ def plot_combined_by_temperature(by_temp: pd.DataFrame, output_path: Path) -> No
         )
     ax.set_xlabel("Cutoff time (sec)")
     ax.set_ylabel("Percent of tests")
-    ax.set_title("MuJoCo Compile and Convergence Rate vs. Cutoff Time by Temperature")
+    ax.set_title("MuJoCo Compile and Convergence Rate vs. Agent Cutoff Time by Temperature")
     ax.set_ylim(0, 100)
     ax.invert_xaxis()
 
